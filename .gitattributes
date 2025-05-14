@@ -1,0 +1,3 @@
+# to prevent pull to change the index css color palette
+src/index.css merge=ours
+src/theme/themesConfig.js merge=ours

@@ -1,0 +1,112 @@
+$primary-light: var(--mui-palette-primary-light);
+$primary-main: var(--mui-palette-primary-main);
+$background-paper: var(--mui-palette-background-paper);
+$date-picker-background: rgba($primary-light, 0.7);
+$background-default: var(--mui-palette-background-default);
+
+$date-picker-dark-border: #fff; // Change to your desired white color
+$date-picker-light-border: var(--mui-palette-primary-main); // Assuming you have $primary-main set up
+
+.date-picker-dark {
+    .react-datepicker-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        background-color: #171e2e !important;
+        border-radius: 18px !important;
+    }
+
+    .react-datepicker__input-container {
+        width: 100%;
+
+        input {
+            width: 100%;
+            padding: 15px 14px;
+            border: 1px solid #64748b;
+            border-radius: 18px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+
+            &:hover {
+                border: 1px solid $date-picker-dark-border; // Change to white on hover
+            }
+
+            &:focus,
+            &:focus-visible {
+                border: 1px solid $date-picker-dark-border; // Change to white on focus
+            }
+        }
+    }
+}
+
+.date-picker-light {
+    .react-datepicker-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        background-color: $background-paper !important;
+        border-radius: 18px !important;
+    }
+
+    .react-datepicker__input-container {
+        width: 100%;
+
+        input {
+            width: 100%;
+            padding: 15px 14px;
+            border: 1px solid #c8c4c4;
+            border-radius: 18px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+
+            &:hover {
+                border: 1px solid $date-picker-light-border; // Change to primary color on hover
+            }
+
+            &:focus,
+            &:focus-visible {
+                border: 1px solid $date-picker-light-border; // Change to primary color on focus
+            }
+        }
+    }
+}
+
+.date-picker-error {
+    .react-datepicker-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .react-datepicker__input-container {
+        width: 100%;
+
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #f44336 !important;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s ease-in-out;
+            color: red !important;
+        }
+    }
+
+    .helper-text {
+        margin-left: 10px;
+        color: #f44336;
+    }
+}
+
+// Dark mode styles
+.theme-dark {
+    .react-datepicker__input-container input {
+        background-color: #64748b12;
+        color: white;
+        border-color: gray;
+
+        &:focus {
+            border-color: #1e90ff;
+        }
+    }
+}

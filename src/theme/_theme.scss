@@ -1,0 +1,75 @@
+// Primary Colors
+$primary-light: var(--mui-palette-primary-light);
+$primary-main: var(--mui-palette-primary-main);
+$primary-dark: var(--mui-palette-primary-dark);
+$primary-contrastText: var(--mui-palette-primary-contrastText);
+
+// Secondary Colors
+$secondary-light: var(--mui-palette-secondary-light);
+$secondary-main: var(--mui-palette-secondary-main);
+$secondary-dark: var(--mui-palette-secondary-dark);
+$secondary-contrastText: var(--mui-palette-secondary-contrastText);
+
+// Background Colors
+$background-paper: var(--mui-palette-background-paper);
+$background-default: var(--mui-palette-background-default);
+$background-hover: var(--mui-palette-background-hover);
+
+// Error Colors
+$error-light: var(--mui-palette-error-light);
+$error-main: var(--mui-palette-error-main);
+$error-dark: var(--mui-palette-error-dark);
+$error-contrastText: var(--mui-palette-error-contrastText);
+
+// Text Colors
+$text-primary: red;
+$text-secondary: var(--mui-palette-text-secondary);
+$text-disabled: var(--mui-palette-text-disabled);
+
+// Common Colors
+$common-black: var(--mui-palette-common-black);
+$common-white: var(--mui-palette-common-white);
+
+// Divider Color
+$divider: var(--mui-palette-divider);
+
+// Theme-based Utility Classes
+body {
+  background-color: $background-default;
+  color: red;
+}
+
+// Buttons
+.button {
+  background-color: $primary-main;
+  border: 1px solid $secondary-main;
+  color: $primary-contrastText;
+
+  &:hover {
+    background-color: darken($primary-main, 10%);
+  }
+}
+
+// Card Component
+.card {
+  background-color: $background-paper;
+  border: 1px solid $divider;
+}
+
+// Error Messages
+.error-message {
+  color: $error-main;
+  background-color: lighten($error-light, 10%);
+  border-left: 4px solid $error-dark;
+}
+
+// Disabled Text Example
+.disabled-text {
+  color: $text-disabled;
+  opacity: 0.6;
+}
+
+// Divider
+.divider {
+  border-bottom: 1px solid $divider;
+}
