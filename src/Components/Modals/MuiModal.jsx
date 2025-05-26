@@ -119,9 +119,7 @@ const MuiModal = ({
                     borderTop: `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  {buttonChildren ? (
-                    buttonChildren
-                  ) : (
+                  {buttonChildren || (
                     <>
                       <Button variant="outlined" onClick={onClose}>
                         {cancelButtonName}

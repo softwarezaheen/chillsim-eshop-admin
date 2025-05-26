@@ -1,14 +1,10 @@
 //UTILITIES
-import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
 //component
-import Grid from "@mui/material/Grid2";
 import { Card, TableCell, TablePagination } from "@mui/material";
-
 import { toast } from "react-toastify";
-import MuiTable from "../../Components/Tables/MuiTable/MuiTable";
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
 import { getAllUserDevices } from "../../core/apis/devicesAPI";
@@ -52,6 +48,7 @@ const UserDetail = () => {
           setLoading(false);
         });
     } catch (e) {
+      console.error("Failed to load user devices:", e);
       toast.error("Failed to load user devices");
       setLoading(false);
     }

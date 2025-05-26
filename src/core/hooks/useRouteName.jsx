@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 
 const useRouteName = () => {
   const location = useLocation();
-  const { token } = useSelector((state) => state.authentication);
+  const { access_token } = useSelector((state) => state.authentication);
 
   const currentRoute = privateRoutes?.[0]?.children.find((route) => {
     const routeRegex = new RegExp(route.regex);
@@ -12,9 +12,10 @@ const useRouteName = () => {
   });
 
   if (location?.pathname === "/") {
-    return token ? "Users" : "";
+    return access_token ? "Users" : "";
+  } else {
+    return currentRoute ? currentRoute.name : "Unknown Page";
   }
-  return currentRoute ? currentRoute.name : "Unknown Page";
 };
 
 export default useRouteName;

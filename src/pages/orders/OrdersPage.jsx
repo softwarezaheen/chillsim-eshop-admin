@@ -1,7 +1,7 @@
 //UTILITIES
-import React, { useEffect, useState } from "react";
-import CountUp from "react-countup";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import CountUp from "react-countup";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { toast } from "react-toastify";
 //COMPONENT
@@ -14,9 +14,9 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import Filters from "../../Components/Filters/Filters";
-import TagComponent from "../../Components/shared/tag-component/TagComponent";
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
+import TagComponent from "../../Components/shared/tag-component/TagComponent";
 import { getAllOrders } from "../../core/apis/ordersAPI";
 import { getAllUsersDropdown } from "../../core/apis/usersAPI";
 
@@ -89,6 +89,7 @@ function OrdersPage() {
           setLoading(false);
         });
     } catch (e) {
+      console.error("Failed to load devices:", e);
       toast.error("Failed to load devices");
 
       setLoading(false);
@@ -114,14 +115,16 @@ function OrdersPage() {
 
   const tableHeaders = [
     { name: "Order ID" },
-    { name: "User ID" },
-    { name: "Bundle" },
+    { name: "User Email" },
+    { name: "User Phone" },
+    { name: "Bundle Name" },
     { name: "Amount" },
     { name: "Order Type" },
     { name: "Payment Status" },
-    { name: "Payment Time" },
+    { name: "Created At" },
   ];
 
+  console.log(data, "ddddddddddddddddd");
   return (
     <Card className="page-card">
       <Filters
@@ -132,9 +135,12 @@ function OrdersPage() {
         <Grid container size={{ xs: 12 }} spacing={2}>
           <Grid item size={{ xs: 12, sm: 3 }}>
             <FormControl fullWidth>
-              <label className="mb-2">User</label>
+              <label className="mb-2" htmlFor="user-input">
+                User
+              </label>
 
               <AsyncPaginate
+                id="user-input"
                 isClearable={true}
                 value={selectedUser}
                 placeholder={"Select User Email"}
@@ -171,13 +177,21 @@ function OrdersPage() {
               sx={{ minWidth: "200px" }}
               className={"max-w-[250px] truncate"}
             >
-              {el?.user_id || "N/A"}
+              {el?.user?.metadata?.email || "N/A"}
             </TableCell>
             <TableCell
               sx={{ minWidth: "200px" }}
               className={"max-w-[250px] truncate"}
             >
-              {el?.bundle_id || "N/A"}
+              {el?.user?.metadata?.msisdn || "N/A"}
+            </TableCell>
+            <TableCell
+              sx={{ minWidth: "200px" }}
+              className={"max-w-[250px] truncate"}
+            >
+              {el?.bundle_data
+                ? JSON.parse(el?.bundle_data)?.display_title
+                : "N/A"}
             </TableCell>
             <TableCell
               sx={{ minWidth: "200px" }}
@@ -207,8 +221,8 @@ function OrdersPage() {
               sx={{ minWidth: "200px" }}
               className={"max-w-[250px] truncate"}
             >
-              {el?.payment_time
-                ? dayjs(el?.payment_time).format("DD-MM-YYYY HH:mm")
+              {el?.created_at
+                ? dayjs(el?.created_at).format("DD-MM-YYYY HH:mm")
                 : "N/A"}
             </TableCell>
           </RowComponent>

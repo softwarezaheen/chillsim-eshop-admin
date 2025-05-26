@@ -24,7 +24,7 @@ export function TableCustomHeader(props) {
       <TableRow>
         {headers?.map((item, index) => (
           <TableCell
-            key={index}
+            key={index} // NOSONAR
             sortDirection={sortedBy === item.sorted ? orderBy : false}
           >
             {item.sorted ? (

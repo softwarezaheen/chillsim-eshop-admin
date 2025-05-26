@@ -1,6 +1,10 @@
 //UTILITIES
-import React, { useState } from "react";
+import { useState } from "react";
 //COMPONENT
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   Collapse,
   IconButton,
@@ -8,10 +12,6 @@ import {
   TableRow,
   Tooltip,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddIcon from "@mui/icons-material/Add";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 
 //CSS
 
@@ -28,7 +28,7 @@ export function RowComponent(props) {
   } = props;
   //VARIABLES
 
-  const [open, setOpen] = useState(openCollapse);
+  const [open] = useState(openCollapse);
 
   //FUNCTIONS
 
@@ -36,7 +36,7 @@ export function RowComponent(props) {
     <>
       <TableRow
         className={handleHover ? "cursor-pointer tableRow" : "tableRow"}
-        hover={handleHover ? true : false}
+        hover={handleHover}
         onClick={handleHover ? (e) => handleHover(row?.id) : null}
         key={keyProps ? keyProps : row?.id}
       >
@@ -106,7 +106,7 @@ export function RowComponent(props) {
       {open && (
         <TableRow
           className="collapse-row"
-          key={`${keyProps ? keyProps : row?.id}-collapse`}
+          key={`${keyProps || row?.id}-collapse`}
         >
           <TableCell colSpan={colSpan}>
             <Collapse in={open} timeout="auto" unmountOnExit>

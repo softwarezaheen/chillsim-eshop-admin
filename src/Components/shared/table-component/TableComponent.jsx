@@ -1,16 +1,14 @@
 import {
   Table,
   TableBody,
-  TableContainer,
-  TablePagination,
+  TableContainer
 } from "@mui/material";
-import React, { useState } from "react";
-import TableCustomHeader from "./TableCustomHeader";
-import TableSkeletons from "../skeletons/TableSkeletons";
 import NoDataFound from "../fallbacks/no-data-found/NoDataFound";
-import { Stop } from "@mui/icons-material";
-
+import TableSkeletons from "../skeletons/TableSkeletons";
+import TableCustomHeader from "./TableCustomHeader";
 import DoDisturbIcon from "@mui/icons-material/DoDisturb";
+
+
 const TableComponent = (props) => {
   const {
     noDataFound = "No Data Found",

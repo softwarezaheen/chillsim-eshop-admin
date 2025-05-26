@@ -1,35 +1,28 @@
-import React, { useEffect, useState } from "react";
+import SearchIcon from "@mui/icons-material/Search";
+import {
+  Card,
+  FormControl,
+  Grid2,
+  Switch,
+  TableCell,
+  TablePagination,
+  TextField
+} from "@mui/material";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import Filters from "../../Components/Filters/Filters";
+import MuiModal from "../../Components/Modals/MuiModal";
+import GroupDeleteNotice from "../../Components/page-component/groups/GroupDeleteNotice";
+import RowComponent from "../../Components/shared/table-component/RowComponent";
+import TableComponent from "../../Components/shared/table-component/TableComponent";
 import {
   deleteGroup,
   getAllGroups,
   toggleGroupStatus,
 } from "../../core/apis/groupsAPI";
-import { toast } from "react-toastify";
-import SearchIcon from "@mui/icons-material/Search";
-import TableComponent from "../../Components/shared/table-component/TableComponent";
-import RowComponent from "../../Components/shared/table-component/RowComponent";
-import LinkOffIcon from "@mui/icons-material/LinkOff";
-import {
-  Button,
-  Card,
-  FormControl,
-  FormControlLabel,
-  Grid2,
-  IconButton,
-  List,
-  ListItem,
-  Switch,
-  TableCell,
-  TablePagination,
-  TextField,
-  Tooltip,
-} from "@mui/material";
-import Filters from "../../Components/Filters/Filters";
-import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
-import MuiModal from "../../Components/Modals/MuiModal";
 import { displayTypes, groupTypes } from "../../core/vairables/EnumData";
-import GroupDeleteNotice from "../../Components/page-component/groups/GroupDeleteNotice";
 
 const GroupsList = () => {
   const navigate = useNavigate();
@@ -135,8 +128,11 @@ const GroupsList = () => {
           <Grid2 container size={{ xs: 12 }} spacing={2}>
             <Grid2 item size={{ xs: 12, sm: 3 }}>
               <FormControl fullWidth>
-                <label className="mb-2">Search</label>
+                <label className="mb-2" htmlFor="search-input">
+                  Search
+                </label>
                 <TextField
+                  id="search-input"
                   fullWidth
                   required
                   size="small"

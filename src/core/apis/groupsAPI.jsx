@@ -21,6 +21,7 @@ export const getAllGroups = async (page, pageSize, name, async = false) => {
 
     return res;
   } catch (error) {
+    console.error("error in getAllGroups:", error);
     throw error;
   }
 };
@@ -40,6 +41,7 @@ export const getGroupById = async (id) => {
 
     return res;
   } catch (error) {
+    console.error("error in getGroupById:", error);
     throw error;
   }
 };
@@ -58,6 +60,7 @@ export const toggleGroupStatus = async ({ id, currentValue }) => {
 
     return res;
   } catch (error) {
+    console.error("error in toggleGroupStatus:", error);
     throw error;
   }
 };
@@ -222,7 +225,7 @@ we need to clean up any uploaded icons for tags that were uploaded successfully.
         if no icon and the tag is already linked to an icon that means that the user has removed the icon
         if icon and instance of blob and in case it has already a linked icon, delete previous one to upload new one
         */
-        if (!selectedTagRes || !selectedTagRes?.error) {
+        if (!selectedTagRes?.error) {
           if (
             (!tag?.icon && selectedTagRes?.data?.icon) ||
             (tag.icon && tag.icon instanceof Blob && selectedTagRes?.data?.icon)

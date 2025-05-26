@@ -33,6 +33,7 @@ export const getAllBundles = async (page, pageSize, name, tags) => {
       };
     }
   } catch (error) {
+    console.error("error in getAllBundles:", error);
     throw error;
   }
 };
@@ -51,6 +52,7 @@ export const toggleBundleStatus = async ({ id, currentValue }) => {
     console.log(res, "wwwwwwwwwwww");
     return res;
   } catch (error) {
+    console.error("error in toggleBundleStatus:", error);
     throw error;
   }
 };
@@ -68,6 +70,7 @@ export const updateBundleTitle = async (payload) => {
     console.log(res, "wwwwwwwwwwww");
     return res;
   } catch (error) {
+    console.error("error in updateBundleTitle:", error);
     throw error;
   }
 };
@@ -122,6 +125,7 @@ export const getBundleTagsAndGroups = async (bundleId) => {
       error: tagRes?.error || bundleRes?.error,
     };
   } catch (error) {
+    console.error("error in getBundleTagsAndGroups:", error);
     throw error;
   }
 };

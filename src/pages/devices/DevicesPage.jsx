@@ -1,8 +1,8 @@
 //UTILITIES
-import React, { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { toast } from "react-toastify";
-import dayjs from "dayjs";
 //COMPONENT
 import {
   Card,
@@ -12,18 +12,17 @@ import {
   useTheme,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import supabase from "../../core/apis/supabase";
 import Filters from "../../Components/Filters/Filters";
+import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
 import { getAllDevices } from "../../core/apis/devicesAPI";
-import RowComponent from "../../Components/shared/table-component/RowComponent";
 import { getAllUsersDropdown } from "../../core/apis/usersAPI";
 
 function DevicesPage() {
   const theme = useTheme();
 
   const asyncPaginateStyles = theme?.asyncPaginateStyles || {};
-  const [loadedOptions, setLoadedOptions] = useState([]);
+  const loadedOptions = [];
   const [loading, setLoading] = useState(null);
   const [searchQueries, setSearchQueries] = useState({
     pageSize: 10,
@@ -62,6 +61,7 @@ function DevicesPage() {
           setLoading(false);
         });
     } catch (e) {
+      console.error("Device fetch failed:", e);
       toast.error("Failed to load devices");
 
       setLoading(false);
@@ -130,8 +130,11 @@ function DevicesPage() {
         <Grid container size={{ xs: 12 }} spacing={2}>
           <Grid item size={{ xs: 12, sm: 3 }}>
             <FormControl fullWidth>
-              <label className="mb-2">User</label>
+              <label className="mb-2" htmlFor="user-input">
+                User
+              </label>
               <AsyncPaginate
+                id="user-input"
                 isClearable={true}
                 value={selectedUser}
                 loadOptions={loadOptions}

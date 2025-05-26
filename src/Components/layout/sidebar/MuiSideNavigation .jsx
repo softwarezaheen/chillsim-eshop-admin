@@ -4,25 +4,21 @@ import {
 } from "@mui/icons-material";
 import {
   Box,
-  ClickAwayListener,
   Drawer,
-  Grid2,
   IconButton,
   List,
-  useMediaQuery,
-  useTheme,
+  useMediaQuery
 } from "@mui/material";
 import { useCallback, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import montymobileimage from "../../../assets/monty-mobile-icon.svg";
+import { useLocation } from "react-router-dom";
+import { MenuRoutes } from "../../../core/routes/RouteVariables";
+import IconImage from "../../shared/icon-image/IconImage";
 import { closedMixin, openedMixin } from "./MenuFunctions";
 import MenuItems from "./MenuItems";
 import MuiDrawerHeader from "./MuiDrawerHeader";
 import ToolTipMenu from "./ToolTipMenu";
-import { INDEX_ROUTE, MenuRoutes } from "../../../core/routes/RouteVariables";
-const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
-  const theme = useTheme();
 
+const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
   const isSmall = useMediaQuery("(max-width: 1024px)");
   const location = useLocation();
   const pathName = location.pathname;
@@ -64,7 +60,7 @@ const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
       }
       return (
         <MenuItems
-          key={index}
+          key={item?.recordGuid || index}
           item={item}
           level={level}
           hasChildren={hasChildren}
@@ -78,6 +74,7 @@ const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
         />
       );
     });
+
   const handleDrawerClose = (_, reason) => {
     if (reason === "backdropClick" || reason === "escapeKeyDown") {
       setOpen(false);
@@ -105,9 +102,7 @@ const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
               "flex flex-row justify-between gap-[0.5rem] items-center w-full"
             }
           >
-            <Link to={INDEX_ROUTE}>
-              <img alt="Monty Mobile" src={montymobileimage} width={85} />{" "}
-            </Link>
+            <IconImage />
 
             <IconButton
               onClick={() => {

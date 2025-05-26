@@ -1,5 +1,5 @@
+import SaveIcon from "@mui/icons-material/Save";
 import {
-  Box,
   Button,
   Card,
   CardContent,
@@ -8,21 +8,19 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { useTheme } from "@mui/styles";
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { toast } from "react-toastify";
+import NoDataFound from "../../Components/shared/fallbacks/no-data-found/NoDataFound";
 import {
   assignTagsToBundle,
   getBundleTagsAndGroups,
 } from "../../core/apis/bundlesAPI";
 import { getAllGroups } from "../../core/apis/groupsAPI";
-import Inventory2Icon from "@mui/icons-material/Inventory2";
 import GroupSection from "./components/GroupSection";
 import { AssignBundleContext } from "./hooks/AssignBundleContext";
-import SaveIcon from "@mui/icons-material/Save";
 import AssignBundleToGroupsSkeleton from "./loaders/AssignBundleToGroupsSkeleton";
-import NoDataFound from "../../Components/shared/fallbacks/no-data-found/NoDataFound";
 
 export default function AssignBundleToGroups() {
   const theme = useTheme();
@@ -165,8 +163,8 @@ export default function AssignBundleToGroups() {
 
   const removeErrorKey = (keyToRemove) => {
     setErrors((prev) => {
-      if (Object.prototype.hasOwnProperty.call(prev, keyToRemove)) {
-        const { [keyToRemove]: _, ...rest } = prev;
+      if (Object.hasOwn(prev, keyToRemove)) {
+        const { [keyToRemove]: __unused, ...rest } = prev;
         return rest;
       }
       return prev;
@@ -228,6 +226,27 @@ export default function AssignBundleToGroups() {
     }
   };
 
+  const assignBundleContextValue = useMemo(
+    () => ({
+      selectedTags,
+      setSelectedTags,
+      removeGroup,
+      removeTag,
+      isTagSelected,
+      selectTag,
+      addToGroupTagMapping,
+    }),
+    [
+      selectedTags,
+      setSelectedTags,
+      removeGroup,
+      removeTag,
+      isTagSelected,
+      selectTag,
+      addToGroupTagMapping,
+    ]
+  );
+
   useEffect(() => {
     if (bundleId) fetchTags();
   }, [bundleId]);
@@ -250,17 +269,7 @@ export default function AssignBundleToGroups() {
   }
 
   return (
-    <AssignBundleContext.Provider
-      value={{
-        selectedTags,
-        setSelectedTags,
-        removeGroup,
-        removeTag,
-        isTagSelected,
-        selectTag,
-        addToGroupTagMapping,
-      }}
-    >
+    <AssignBundleContext.Provider value={assignBundleContextValue}>
       <Card className="page-card">
         <Grid container spacing={2}>
           <Grid size={{ xs: 12 }}>
@@ -271,25 +280,25 @@ export default function AssignBundleToGroups() {
           <div className="w-full flex flex-col-reverse sm:flex-row justify-between gap-[1rem] sm:items-center">
             <div>
               <FormControl fullWidth>
-                <label className="mb-2">Groups</label>
+                <label className="mb-2" htmlFor="group-select">
+                  Groups
+                </label>
                 <AsyncPaginate
-                  isMulti={true}
-                  isClearable={true}
+                  inputId="group-select"
+                  isMulti
+                  isClearable
                   value={selectedGroupes}
                   loadOptions={loadGroupOptions}
-                  placeholder={"Select Groups"}
-                  onChange={(value) => {
-                    onChangeGroups(value);
-                  }}
+                  placeholder="Select Groups"
+                  onChange={(value) => onChangeGroups(value)}
                   additional={{ page: 1 }}
                   isSearchable
                   debounceTimeout={300}
-                  styles={{
-                    ...asyncPaginateStyles,
-                  }}
+                  styles={asyncPaginateStyles}
                 />
               </FormControl>
             </div>
+
             <div className={"flex justify-end items-center gap-[0.5rem]"}>
               <Button
                 variant="contained"

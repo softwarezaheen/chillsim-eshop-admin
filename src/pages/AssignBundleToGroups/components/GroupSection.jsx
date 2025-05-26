@@ -1,24 +1,22 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 // MUI imports
-import { useTheme } from "@emotion/react";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { Box } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Typography from "@mui/material/Typography";
 import { toast } from "react-toastify";
+import NoDataFound from "../../../Components/shared/fallbacks/no-data-found/NoDataFound";
 import { getTagsByTagGroup } from "../../../core/apis/tagsAPI";
 import { useAssignBundleContext } from "../hooks/AssignBundleContext";
 import GroupSectionSkeleton from "../loaders/GroupSectionSkeleton";
 import GroupTagSkeleton from "../loaders/GroupTagSkeleton";
 import GroupTag from "./GroupTag";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import NoDataFound from "../../../Components/shared/fallbacks/no-data-found/NoDataFound";
 
 export default function GroupSection({ group }) {
   const { id, name } = group;
-  const theme = useTheme();
   const { addToGroupTagMapping } = useAssignBundleContext();
 
   const [tags, setTags] = useState([]);
@@ -33,7 +31,7 @@ export default function GroupSection({ group }) {
     setLoading(true);
 
     try {
-      const { data, error, count } = await getTagsByTagGroup(id);
+      const { data, error } = await getTagsByTagGroup(id);
 
       if (error) {
         throw error;
@@ -56,6 +54,22 @@ export default function GroupSection({ group }) {
     return <GroupSectionSkeleton />;
   }
 
+  const content = () => {
+    if (loading) {
+      return <GroupTagSkeleton />;
+    } else if (tags.length == 0) {
+      return <NoDataFound text={"No tags available in this group"} />;
+    } else {
+      return (
+        <Box className="flex gap-2 flex-wrap">
+          {tags?.map((tag) => (
+            <GroupTag selected={false} tag={tag || null} key={tag?.id} />
+          ))}
+        </Box>
+      );
+    }
+  };
+  
   return (
     <Accordion expanded={expanded} onChange={handleChange}>
       <AccordionSummary
@@ -108,19 +122,7 @@ export default function GroupSection({ group }) {
         }}
       >
         <Typography sx={{ color: "#334155", lineHeight: 1.6 }}>
-          <>
-            {loading ? (
-              <GroupTagSkeleton />
-            ) : tags.length == 0 ? (
-              <NoDataFound text={"No tags available in this group"} />
-            ) : (
-              <Box className="flex gap-2 flex-wrap">
-                {tags?.map((tag) => (
-                  <GroupTag selected={false} tag={tag || null} key={tag?.id} />
-                ))}
-              </Box>
-            )}
-          </>
+          <>{content()}</>
         </Typography>
       </AccordionDetails>
     </Accordion>

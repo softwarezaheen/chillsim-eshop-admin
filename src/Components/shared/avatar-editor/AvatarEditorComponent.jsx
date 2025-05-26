@@ -1,13 +1,10 @@
-import { Close, Delete, Upload } from "@mui/icons-material";
+import { Delete, Upload } from "@mui/icons-material";
 import {
-  Button,
-  Dialog,
-  DialogContent,
   FormHelperText,
   IconButton,
-  Slider,
+  Slider
 } from "@mui/material";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import AvatarEditor from "react-avatar-editor";
 import Dropzone from "react-dropzone";
 import MuiModal from "../../Modals/MuiModal";

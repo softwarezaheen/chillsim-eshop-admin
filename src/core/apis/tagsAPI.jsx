@@ -16,6 +16,7 @@ export const addTags = async (payload) => {
 
     return res;
   } catch (error) {
+    console.error("error in addTags:", error);
     throw error;
   }
 };
@@ -37,9 +38,10 @@ export const upsertTag = async (payload) => {
       );
       return query;
     });
-
+    
     return res;
   } catch (error) {
+    console.error("error in upsertTag:", error);
     throw error;
   }
 };
@@ -51,18 +53,15 @@ export const deleteTags = async (payload) => {
       let query = supabase.from("tag").delete().in("id", Ids);
       return query;
     });
-
-    // const res = await api(() => {
-    //   let query = supabase.from("tag").delete().in("id", Ids);
-    //   return query;
-    // });
+    
     console.log(res, "deleted tag res");
     if (!res?.error) {
       cleanupTagUploadedIcons(payload);
     }
-
+    
     return res;
   } catch (error) {
+    console.error("error in deleteTags:", error);
     throw error;
   }
 };

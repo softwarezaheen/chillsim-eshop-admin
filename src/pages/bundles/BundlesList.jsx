@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { Edit, Visibility } from "@mui/icons-material";
+import LayersIcon from "@mui/icons-material/Layers";
 import SearchIcon from "@mui/icons-material/Search";
-import TableComponent from "../../Components/shared/table-component/TableComponent";
-import RowComponent from "../../Components/shared/table-component/RowComponent";
 import {
   Card,
   FormControl,
@@ -14,24 +12,25 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import Filters from "../../Components/Filters/Filters";
-import { useNavigate } from "react-router-dom";
-import { getAllBundles, toggleBundleStatus } from "../../core/apis/bundlesAPI";
-import LayersIcon from "@mui/icons-material/Layers";
-import { Edit, Visibility } from "@mui/icons-material";
-import UpdateBundleName from "../../Components/page-component/bundles/UpdateBundleName";
-import BundleDetail from "../../Components/page-component/bundles/BundleDetail";
-import { getAllBundleTags } from "../../core/apis/tagsAPI";
-import { AsyncPaginate } from "react-select-async-paginate";
 import { useTheme } from "@mui/styles";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { AsyncPaginate } from "react-select-async-paginate";
+import { toast } from "react-toastify";
+import Filters from "../../Components/Filters/Filters";
+import BundleDetail from "../../Components/page-component/bundles/BundleDetail";
+import UpdateBundleName from "../../Components/page-component/bundles/UpdateBundleName";
+import RowComponent from "../../Components/shared/table-component/RowComponent";
+import TableComponent from "../../Components/shared/table-component/TableComponent";
+import { getAllBundles, toggleBundleStatus } from "../../core/apis/bundlesAPI";
+import { getAllBundleTags } from "../../core/apis/tagsAPI";
 
 const BundleList = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const asyncPaginateStyles = theme?.asyncPaginateStyles || {};
   const [loading, setLoading] = useState(false);
-  const [allTags, setAllTags] = useState([]);
-  const [oepnDetail, setOpenDetail] = useState({ open: false, data: null });
+  const [openDetail, setOpenDetail] = useState({ open: false, data: null });
   const [openUpdate, setOpenUpdate] = useState({ open: false, data: null });
   const [data, setData] = useState([]);
   const [search, setSearch] = useState("");
@@ -166,8 +165,11 @@ const BundleList = () => {
         <Grid2 container size={{ xs: 12 }} spacing={2}>
           <Grid2 item size={{ xs: 12, sm: 3 }}>
             <FormControl fullWidth>
-              <label className="mb-2">Search</label>
+              <label className="mb-2" htmlFor="search-input">
+                Search
+              </label>
               <TextField
+                id="search-input"
                 fullWidth
                 required
                 size="small"
@@ -191,8 +193,11 @@ const BundleList = () => {
           </Grid2>
           <Grid2 item size={{ xs: 12, sm: 3 }}>
             <FormControl fullWidth>
-              <label className="mb-2">Tags</label>
+              <label className="mb-2" htmlFor="tags-select">
+                Tags
+              </label>
               <AsyncPaginate
+                inputId="tags-select"
                 isMulti={true}
                 isClearable={true}
                 value={selectedTags}
@@ -317,10 +322,10 @@ const BundleList = () => {
           refetchData={getBundles}
         />
       )}
-      {oepnDetail?.open && (
+      {openDetail?.open && (
         <BundleDetail
           onClose={() => setOpenDetail({ open: false, data: null })}
-          bundle={oepnDetail?.data?.data}
+          bundle={openDetail?.data?.data}
         />
       )}
     </Card>

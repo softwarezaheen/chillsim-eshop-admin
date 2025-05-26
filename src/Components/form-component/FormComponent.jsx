@@ -1,5 +1,7 @@
-import React from "react";
-import { useDebouncedCallback } from "use-debounce";
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
+import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import {
   Autocomplete,
   Avatar,
@@ -8,12 +10,8 @@ import {
   InputAdornment,
   TextField,
 } from "@mui/material";
-import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
-import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import { useEffect, useState } from "react";
-import { FileUploader } from "react-drag-drop-files";
+import React, { useEffect, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 import AvatarEditorComponent from "../shared/avatar-editor/AvatarEditorComponent";
 
 export const FormInput = (props) => {
@@ -55,8 +53,7 @@ export const FormInput = (props) => {
 };
 
 export const FormPassword = (props) => {
-  const { label, placeholder, value, onChange, startAdornment, helperText } =
-    props;
+  const { placeholder, value, onChange, startAdornment, helperText } = props;
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -118,7 +115,7 @@ export const FormDropdownList = (props) => {
     accessValue = "id",
   } = props;
   const { placeholder, variant, disabled, required } = props;
-  const { value, filterDropdown } = props;
+  const { value } = props;
 
   const [val, setVal] = useState(null);
   useEffect(() => {
@@ -178,10 +175,27 @@ export const FormAvatarEditor = (props) => {
   const { value, name, onChange } = props;
   const [open, setOpen] = useState(false);
   console.log(value, "oooooooooooo", value instanceof Blob);
+  let passedValue = null;
+  if (value) {
+    if (value instanceof Blob) {
+      passedValue = URL.createObjectURL(value);
+    } else {
+      passedValue = `${value}`;
+    }
+  }
+
   return (
     <>
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
         className={
           "cursor-pointer border border-gray-200 rounded-2xl h-[38px] flex flex-row justify-between gap-[0.5rem] p-1 items-center min-w-[200px] "
         }
@@ -212,13 +226,7 @@ export const FormAvatarEditor = (props) => {
       </div>
       {open && (
         <AvatarEditorComponent
-          value={
-            value
-              ? value instanceof Blob
-                ? URL.createObjectURL(value)
-                : `${value}`
-              : null
-          }
+          value={passedValue}
           onClose={() => setOpen(false)}
           updateImage={(value) => onChange(value)}
         />
@@ -244,7 +252,7 @@ export const FormPaginationDropdownList = (props) => {
 
   const [inputValue, setInputValue] = useState("");
   const handleOnChange = (selected) => {
-    onChange(selected ? selected : null);
+    onChange(selected);
     if (!selected) {
       setInputValue("");
       handleResetData(false, "");

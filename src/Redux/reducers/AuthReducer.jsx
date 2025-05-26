@@ -25,7 +25,6 @@ const AuthSlice = createSlice({
     SignIn: (state, action) => {
       return {
         ...state,
-        user_token: action?.payload?.user_token,
         access_token: action?.payload?.access_token,
         refresh_token: action?.payload?.refresh_token,
         user_info: action?.payload?.user_info,

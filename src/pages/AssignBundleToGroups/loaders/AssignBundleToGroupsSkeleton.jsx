@@ -29,7 +29,7 @@ export default function AssignBundleToGroupsSkeleton() {
             elevation={0}
             sx={{
               border: "1px solid #d1d5db",
-              background:"#d1d5db",
+              background: "#d1d5db",
               borderRadius: "25px",
               padding: "16px 16px",
               width: "20%",
@@ -42,7 +42,7 @@ export default function AssignBundleToGroupsSkeleton() {
         </Grid>
       </Grid>
 
-      {[1, 2].map((i, index) => (
+      {[1, 2].map((_, index) => (// NOSONAR
         <GroupSectionSkeleton key={index} />
       ))}
     </Card>

@@ -1,127 +1,18 @@
 import {
   Box,
-  Card,
   Checkbox,
   IconButton,
   ListItemText,
   MenuItem,
   Radio,
   Select,
-  Typography,
+  Typography
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import React, { useRef, useState } from "react";
-// import MuiCheckbox from "../MuiCheckbox";
-import EmptyComponent from "./EmptyComponent";
-// import "./MuiTable.scss";
 import Grid from "@mui/material/Grid2";
 import { useTheme } from "@mui/styles";
-const CustomHeader = (props) => {
-  return <div>{props.column.field}</div>;
-};
-// const MuiTable = ({
-//   columns,
-//   data,
-//   loading,
-//   paginationModel,
-//   setPaginationModel,
-//   totalRows,
-//   style,
-//   pageSizeOptions = [5, 10, 20, 100],
-//   rowId = "index",
-//   rowSelectionModel = null,
-//   setRowSelectionModel = null,
-//   density = "compact",
-//   paginationMode = "server",
-//   hideFooterPagination = false,
-// }) => {
-//   //remove sorting from all columns
-//   // columns = columns.map((item)=>{ return {...item,sortable:false}})
-
-//   return (
-//     <Box id="MuiTable" className="no_design_scroll">
-//       <DataGrid
-//         autoHeight
-//         hideFooterPagination={hideFooterPagination}
-//         slots={{ noRowsOverlay: EmptyComponent, BaseCheckbox: MuiCheckbox }}
-//         className={`customized datagrid ${data?.length == 0 ? "empty" : ""} `}
-//         getRowId={(row) => row[rowId]}
-//         disableRowSelectionOnClick
-//         rowCount={totalRows} // Make sure this value is correct
-//         columns={
-//           rowSelectionModel && typeof setRowSelectionModel == "function"
-//             ? [
-//                 {
-//                   field: "select",
-//                   width: 75,
-//                   headerClassName: "remove-Icons",
-//                   headerName: (
-//                     <MuiCheckbox
-//                       checkedIcon={
-//                         rowSelectionModel?.length == data?.length ? (
-//                           <CircleCheckedFilled />
-//                         ) : (
-//                           <RemoveCircleIcon />
-//                         )
-//                       }
-//                       checked={rowSelectionModel?.length > 0}
-//                       onClick={() => {
-//                         if (rowSelectionModel.length > 0)
-//                           setRowSelectionModel([]);
-//                         else {
-//                           setRowSelectionModel(
-//                             data?.map((row, index) =>
-//                               rowId === "index" ? String(index) : row[rowId]
-//                             )
-//                           );
-//                         }
-//                       }}
-//                     />
-//                   ),
-//                   renderCell: (params) => (
-//                     <MuiCheckbox
-//                       onClick={() => {
-//                         setRowSelectionModel((prev) => {
-//                           // Check if the recordGuid is already in the selection model
-//                           if (rowSelectionModel?.includes(params?.row[rowId])) {
-//                             // If it's in the model, remove it (deselect)
-//                             return prev.filter(
-//                               (item) => item != params?.row[rowId]
-//                             );
-//                           } else {
-//                             // If it's not in the model, add it (select)
-//                             return [...prev, params?.row[rowId]];
-//                           }
-//                         });
-//                       }}
-//                       checked={rowSelectionModel?.includes(params?.row[rowId])}
-//                     />
-//                   ),
-//                 },
-//                 ...columns,
-//               ]
-//             : columns
-//         }
-//         rows={data?.map((item, index) => {
-//           return { ...item, index: String(index) };
-//         })}
-//         density={density}
-//         sx={{ "DataGrid-overlayHeight": "600px", ...style }}
-//         pageSizeOptions={pageSizeOptions}
-//         paginationModel={paginationModel}
-//         onPaginationModelChange={setPaginationModel}
-//         paginationMode={paginationMode}
-//         loading={loading}
-//         disableColumnFilter
-//         getRowClassName={(params) =>
-//           params.indexRelativeToCurrentPage % 2 === 0 ? "even" : "odd"
-//         }
-//         sortingOrder={["asc", "desc", null]}
-//         disableColumnMenu={true}
-//       />
-//     </Box>
-//   );
-// };
+import { DataGrid } from "@mui/x-data-grid";
+import { useRef, useState } from "react";
+import EmptyComponent from "./EmptyComponent";
 
 const MuiTable = ({
   columns,
@@ -180,6 +71,20 @@ const MuiTable = ({
         ? prev.filter((col) => col !== field)
         : [...prev, field]
     );
+  };
+
+  const handleRowSelection = (
+    params,
+    rowSelectionModel,
+    setRowSelectionModel,
+    rowId
+  ) => {
+    setRowSelectionModel((prev) => {
+      const id = params?.row[rowId];
+      return rowSelectionModel?.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id];
+    });
   };
 
   return (
@@ -303,17 +208,14 @@ const MuiTable = ({
                   headerClassName: "remove-Icons",
                   renderCell: (params) => (
                     <Radio
-                      onClick={() => {
-                        setRowSelectionModel((prev) => {
-                          if (rowSelectionModel?.includes(params?.row[rowId])) {
-                            return prev.filter(
-                              (item) => item !== params?.row[rowId]
-                            );
-                          } else {
-                            return [...prev, params?.row[rowId]];
-                          }
-                        });
-                      }}
+                      onClick={() =>
+                        handleRowSelection(
+                          params,
+                          rowSelectionModel,
+                          setRowSelectionModel,
+                          rowId
+                        )
+                      }
                       checked={rowSelectionModel?.includes(params?.row[rowId])}
                     />
                   ),
@@ -385,13 +287,7 @@ const MuiTable = ({
             outline: "none !important",
           },
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "transparent!important",
-          },
-          "& .MuiDataGrid-row:hover": {
-            backgroundColor: "inherit !important", // Keeps the original row background on hover
-          },
-          "& .MuiDataGrid-row:hover": {
-            backgroundColor: `inherit !important`,
+            backgroundColor: "inherit !important", 
           },
         }}
       />

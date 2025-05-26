@@ -1,7 +1,3 @@
-//UTILITIES
-import React, { useState } from "react";
-//COMPONENT
-
 import { Close, QuestionMark } from "@mui/icons-material";
 import {
   Avatar,
@@ -12,7 +8,6 @@ import {
 } from "@mui/material";
 import clsx from "clsx";
 import TooltipComponent from "../../shared/tooltip-component/TooltipComponent";
-import NoDataFound from "../../shared/fallbacks/no-data-found/NoDataFound";
 
 const BundleDetail = ({ onClose, bundle }) => {
   const isSmall = useMediaQuery("(max-width: 639px)");

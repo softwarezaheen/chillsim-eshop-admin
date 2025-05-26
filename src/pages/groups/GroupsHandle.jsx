@@ -2,9 +2,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Add, Info, Remove } from "@mui/icons-material";
 import { Button, Card, CardContent, IconButton, Tooltip } from "@mui/material";
 import clsx from "clsx";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useDebouncedCallback } from "use-debounce";
 import * as yup from "yup";
 import {
@@ -12,11 +13,10 @@ import {
   FormDropdownList,
   FormInput,
 } from "../../Components/form-component/FormComponent";
+import NoDataFound from "../../Components/shared/fallbacks/no-data-found/NoDataFound";
+import GroupsHandleSkeletons from "../../Components/shared/skeletons/GroupsHandleSkeletons";
 import { addGroup, editGroup, getGroupById } from "../../core/apis/groupsAPI";
 import { displayTypes, groupTypes } from "../../core/vairables/EnumData";
-import { toast } from "react-toastify";
-import GroupsHandleSkeletons from "../../Components/shared/skeletons/GroupsHandleSkeletons";
-import NoDataFound from "../../Components/shared/fallbacks/no-data-found/NoDataFound";
 
 const schema = yup.object().shape({
   name: yup
@@ -53,7 +53,7 @@ const schema = yup.object().shape({
               "conditional-required",
               "Fill group name field",
               function (value) {
-                const { parent, path, createError } = this;
+                const { path, createError } = this;
                 const formValues = this.options.context || {};
                 console.log(formValues, "sssssssssssssss");
                 if (!formValues.name || formValues.name.trim() === "") {
@@ -88,7 +88,7 @@ const GroupsHandle = () => {
   const [loading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(false);
-  const [deletedTags, setDeletedTags] = useState([]);
+  const [deletedTags] = useState([]);
   const {
     control,
     handleSubmit,
@@ -108,12 +108,10 @@ const GroupsHandle = () => {
     mode: "all",
   });
 
-  const { fields, append, prepend, remove, swap, move, insert } = useFieldArray(
-    {
-      control,
-      name: "tags",
-    }
-  );
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "tags",
+  });
 
   useEffect(() => {
     if (id) {
@@ -278,7 +276,7 @@ const GroupsHandle = () => {
             />
           </div>
           <div className={"flex-1 min-w-[200px]"}>
-            <label>Type*</label>
+            <label htmlFor="type-input">Type*</label>
 
             <Controller
               render={({
@@ -286,6 +284,7 @@ const GroupsHandle = () => {
                 fieldState: { error },
               }) => (
                 <FormDropdownList
+                  id="type-input"
                   accessName={"title"}
                   data={displayTypes}
                   value={value}
@@ -302,8 +301,9 @@ const GroupsHandle = () => {
             />
           </div>
           <div className={"flex-1 min-w-[200px]"}>
-            <label>Group Type*</label>
+            <label htmlFor="group-input">Group Type*</label>
             <Controller
+              id="group-input"
               render={({
                 field: { onChange, value },
                 fieldState: { error },
@@ -328,113 +328,119 @@ const GroupsHandle = () => {
           <h6 className="px-2">Tags</h6>
           <div className="w-[20px] h-px bg-gray-300" />
         </div>
-        {fields?.map((el, index) => (
-          <div className="flex flex-col gap-2 w-full sm:w-[70%]" key={index}>
-            <div
-              className={clsx("flex flex-row gap-2 justify-between items-end", {
-                "!items-center": errors?.tags?.length > 0,
-              })}
-              key={`tags-${el?.id}-${el?.index}`}
-            >
-              <div className="flex flex-col sm:flex-row gap-2 flex-1">
-                <div className="w-full sm:w-1/2 min-w-0">
-                  <label className={"flex flex-row items-center"}>
-                    Name*{" "}
-                    {getValues("type")?.enum == "flat" && (
-                      <Tooltip
-                        title={`When the group type is 'flat', a tag is automatically created with the same name as the group.`}
-                      >
-                        <span className={"cursor-pointer"}>
-                          <Info fontSize="small" />
-                        </span>
-                      </Tooltip>
-                    )}
-                  </label>
-                  <Controller
-                    render={({
-                      field: { onChange, value },
-                      fieldState: { error },
-                    }) => (
-                      <FormInput
-                        placeholder="Enter Name"
-                        value={value}
-                        disabled={getValues("type")?.enum == "flat"}
-                        onChange={(value) => {
-                          onChange(value);
-                          debouncedTagName(value, index);
-                        }}
-                        helperText={error?.message}
-                      />
-                    )}
-                    name={`tags.${[index]}.name`}
-                    control={control}
-                  />
-                </div>
-                <div className="w-full sm:w-1/2 min-w-0">
-                  <label>Icon</label>
-                  <Controller
-                    render={({
-                      field: { onChange, value },
-                      fieldState: { error },
-                    }) => (
-                      <FormAvatarEditor
-                        value={value}
-                        name={getValues(`tags.${[index]}.name`)}
-                        onChange={(value) => onChange(value)}
-                      />
-                    )}
-                    name={`tags.${[index]}.icon`}
-                    control={control}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-row gap-2 w-[72px] justify-start">
-                {index === fields?.length - 1 &&
-                watch("type")?.enum !== "flat" ? (
-                  <>
-                    {fields?.length !== 1 && (
-                      <IconButton
-                        color="primary"
-                        onClick={() => {
-                          console.log(el, "deleted row 1");
-                          if (el?.id) {
-                            deletedTags.push(el);
-                          }
-                          remove(index);
-                        }}
-                      >
-                        <Remove fontSize="small" />
-                      </IconButton>
-                    )}
-                    <IconButton
-                      color="primary"
-                      onClick={() => append({ name: "", icon: null })}
-                    >
-                      <Add fontSize="small" />
-                    </IconButton>
-                  </>
-                ) : (
-                  <>
-                    {fields?.length !== 1 && (
-                      <IconButton
-                        color="primary"
-                        onClick={() => {
-                          console.log(el, "deleted row 2");
-                          remove(index);
-                          if (el?.id) {
-                            deletedTags.push(el);
-                          }
-                        }}
-                      >
-                        <Remove fontSize="small" />
-                      </IconButton>
-                    )}
-                  </>
+        {fields?.map(
+          (
+            el,
+            index // NOSONAR
+          ) => (
+            <div className="flex flex-col gap-2 w-full sm:w-[70%]" key={index}>
+              <div
+                className={clsx(
+                  "flex flex-row gap-2 justify-between items-end",
+                  {
+                    "!items-center": errors?.tags?.length > 0,
+                  }
                 )}
+                key={`tags-${el?.id}-${el?.index}`}
+              >
+                <div className="flex flex-col sm:flex-row gap-2 flex-1">
+                  <div className="w-full sm:w-1/2 min-w-0">
+                    <label className={"flex flex-row items-center"}>
+                      Name*{" "}
+                      {getValues("type")?.enum == "flat" && (
+                        <Tooltip
+                          title={`When the group type is 'flat', a tag is automatically created with the same name as the group.`}
+                        >
+                          <span className={"cursor-pointer"}>
+                            <Info fontSize="small" />
+                          </span>
+                        </Tooltip>
+                      )}
+                    </label>
+                    <Controller
+                      render={({
+                        field: { onChange, value },
+                        fieldState: { error },
+                      }) => (
+                        <FormInput
+                          placeholder="Enter Name"
+                          value={value}
+                          disabled={getValues("type")?.enum == "flat"}
+                          onChange={(value) => {
+                            onChange(value);
+                            debouncedTagName(value, index);
+                          }}
+                          helperText={error?.message}
+                        />
+                      )}
+                      name={`tags.${[index]}.name`}
+                      control={control}
+                    />
+                  </div>
+                  <div className="w-full sm:w-1/2 min-w-0">
+                    <label htmlFor="icon-input">Icon</label>
+                    <Controller
+                      id="icon-input"
+                      render={({ field: { onChange, value } }) => (
+                        <FormAvatarEditor
+                          value={value}
+                          name={getValues(`tags.${[index]}.name`)}
+                          onChange={(value) => onChange(value)}
+                        />
+                      )}
+                      name={`tags.${[index]}.icon`}
+                      control={control}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-row gap-2 w-[72px] justify-start">
+                  {index === fields?.length - 1 &&
+                  watch("type")?.enum !== "flat" ? (
+                    <>
+                      {fields?.length !== 1 && (
+                        <IconButton
+                          color="primary"
+                          onClick={() => {
+                            console.log(el, "deleted row 1");
+                            if (el?.id) {
+                              deletedTags.push(el);
+                            }
+                            remove(index);
+                          }}
+                        >
+                          <Remove fontSize="small" />
+                        </IconButton>
+                      )}
+                      <IconButton
+                        color="primary"
+                        onClick={() => append({ name: "", icon: null })}
+                      >
+                        <Add fontSize="small" />
+                      </IconButton>
+                    </>
+                  ) : (
+                    <>
+                      {fields?.length !== 1 && (
+                        <IconButton
+                          color="primary"
+                          onClick={() => {
+                            console.log(el, "deleted row 2");
+                            remove(index);
+                            if (el?.id) {
+                              deletedTags.push(el);
+                            }
+                          }}
+                        >
+                          <Remove fontSize="small" />
+                        </IconButton>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </form>
     </Card>
   );

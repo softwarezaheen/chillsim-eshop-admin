@@ -1,5 +1,5 @@
-import { ClickAwayListener, Tooltip } from "@mui/material";
-import React, { useState } from "react";
+import { Box, ClickAwayListener, Tooltip } from "@mui/material";
+import { useState } from "react";
 
 const TooltipComponent = ({ title, children }) => {
   const [open, setOpen] = useState(false);
@@ -8,9 +8,6 @@ const TooltipComponent = ({ title, children }) => {
     setOpen(false);
   };
 
-  const handleTooltipOpen = () => {
-    setOpen(true);
-  };
   const handleToggleTooltip = () => {
     setOpen(!open);
   };
@@ -30,9 +27,9 @@ const TooltipComponent = ({ title, children }) => {
           },
         }}
       >
-        <div className={"min-w-0"} onClick={() => handleToggleTooltip()}>
+        <Box className={"min-w-0"} onClick={() => handleToggleTooltip()}>
           {children}
-        </div>
+        </Box>
       </Tooltip>
     </ClickAwayListener>
   );

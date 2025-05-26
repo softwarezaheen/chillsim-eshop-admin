@@ -1,6 +1,5 @@
 import { FormHelperText, Grid } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import React from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./styles/datepicker.scss";
@@ -18,19 +17,18 @@ export default function CustomDatePicker({
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === "dark";
 
+  let className;
+
+  if (error) {
+    className = "date-picker-error";
+  } else if (isDarkMode) {
+    className = "date-picker-dark";
+  } else {
+    className = "date-picker-light";
+  }
+  
   return (
-    <Grid
-      item
-      xs={12}
-      sm={6}
-      className={
-        error
-          ? "date-picker-error"
-          : isDarkMode
-          ? "date-picker-dark"
-          : "date-picker-light"
-      }
-    >
+    <Grid item xs={12} sm={6} className={className}>
       <DatePicker
         selected={value}
         onChange={onChange}

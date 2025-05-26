@@ -1,7 +1,8 @@
 //UTILITIES
-import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
 //COMPONENT
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Card,
   FormControl,
@@ -10,11 +11,9 @@ import {
   TextField,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import SearchIcon from "@mui/icons-material/Search";
-import Filters from "../../Components/Filters/Filters";
-import { FormInput } from "../../Components/form-component/FormComponent";
-import ContactUsDetail from "../../Components/page-component/contact-us/ContactUsDetail";
 import { toast } from "react-toastify";
+import Filters from "../../Components/Filters/Filters";
+import ContactUsDetail from "../../Components/page-component/contact-us/ContactUsDetail";
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
 import { getAllMessages } from "../../core/apis/contactusAPI";
@@ -66,6 +65,7 @@ function ContactusPage() {
           setLoading(false);
         });
     } catch (e) {
+      console.error("Failed to load messages:", e);
       toast.error("Failed to load messages");
       setLoading(false);
     }
@@ -94,8 +94,11 @@ function ContactusPage() {
         <Grid container size={{ xs: 12 }} spacing={2}>
           <Grid item size={{ xs: 12, sm: 3 }}>
             <FormControl fullWidth>
-              <label className="mb-2">Email</label>
+              <label className="mb-2" htmlFor="email-input">
+                Email
+              </label>
               <TextField
+                id="email-input"
                 fullWidth
                 required
                 size="small"

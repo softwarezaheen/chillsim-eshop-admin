@@ -22,6 +22,7 @@ export const getAllMessages = async ({ page, pageSize, name }) => {
     console.log(res, "resss");
     return res;
   } catch (error) {
+    console.error("error in getAllMessages:", error);
     throw error;
   }
 };

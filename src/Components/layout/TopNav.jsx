@@ -1,3 +1,4 @@
+import { KeyboardDoubleArrowRight } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import {
@@ -10,30 +11,26 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import React, { useState } from "react";
+import clsx from "clsx";
+import { useState } from "react";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
-import Loader from "../Loader/Loader";
+import { useNavigate } from "react-router-dom";
+import { userSignout } from "../../core/apis/usersAPI";
 import useRouteName from "../../core/hooks/useRouteName";
 import { SignOut } from "../../Redux/reducers/AuthReducer";
-import { userSignout } from "../../core/apis/usersAPI";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import clsx from "clsx";
-import { KeyboardDoubleArrowRight } from "@mui/icons-material";
 
-export default function TopNav({ openSide, setOpenSide }) {
+export default function TopNav({ setOpenSide }) {
   const isSmall = useMediaQuery("(max-width: 1024px)");
 
   const { isAuthenticated } = useSelector((state) => state.authentication);
   const theme = useTheme();
   const dispatch = useDispatch();
   const routeName = useRouteName();
-  const isDark = theme.palette.mode === "dark";
   const navigate = useNavigate();
-  const location = useLocation();
   // Menu state
   const [anchorEl, setAnchorEl] = useState(null);
-  const [loading, setLoading] = useState(false);
+
   const open = Boolean(anchorEl);
 
   // Handle menu open
@@ -57,10 +54,6 @@ export default function TopNav({ openSide, setOpenSide }) {
       }
     });
   };
-
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <Box
@@ -93,7 +86,7 @@ export default function TopNav({ openSide, setOpenSide }) {
           >
             <LazyLoadImage
               alt={import.meta.env.VITE_APP_PROJECT_TITLE}
-              src={"/monty-mobile-icon.svg"}
+              src={"/logo/logo.png"}
               className="h-full w-auto object-cover"
             />
           </button>

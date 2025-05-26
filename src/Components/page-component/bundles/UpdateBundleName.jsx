@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import * as yup from "yup";
 //COMPONENT
 import { Close } from "@mui/icons-material";
-import { FormInput } from "../../form-component/FormComponent";
-import { updateBundleTitle } from "../../../core/apis/bundlesAPI";
 import { Button, Dialog, DialogContent, IconButton } from "@mui/material";
+import { updateBundleTitle } from "../../../core/apis/bundlesAPI";
+import { FormInput } from "../../form-component/FormComponent";
 
 const schema = yup.object().shape({
   bundle_name: yup
@@ -26,15 +26,7 @@ const schema = yup.object().shape({
 const UpdateBundleName = ({ onClose, data, refetchData }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-    watch,
-    getValues,
-    formState: { errors },
-  } = useForm({
+  const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       bundle_name: "",
     },
@@ -70,7 +62,7 @@ const UpdateBundleName = ({ onClose, data, refetchData }) => {
           <IconButton
             aria-label="close"
             onClick={onClose}
-            sx={(theme) => ({
+            sx={() => ({
               position: "absolute",
               right: 8,
               top: 8,
@@ -85,24 +77,27 @@ const UpdateBundleName = ({ onClose, data, refetchData }) => {
           onSubmit={handleSubmit(handleSubmitForm)}
         >
           <h1 className={"text-center"}>{"Update Bundle Display Name"}</h1>
-          <div className={"label-input-wrapper"}>
-            <label>Display Name*</label>
+          <div className="label-input-wrapper">
             <Controller
+              name="bundle_name"
+              control={control}
               render={({
                 field: { onChange, value },
                 fieldState: { error },
               }) => (
-                <FormInput
-                  placeholder={"Enter display name"}
-                  value={value}
-                  helperText={error?.message}
-                  onChange={(value) => onChange(value)}
-                />
+                <label className="w-full">
+                  Display Name*
+                  <FormInput
+                    placeholder="Enter display name"
+                    value={value}
+                    helperText={error?.message}
+                    onChange={(val) => onChange(val)}
+                  />
+                </label>
               )}
-              name="bundle_name"
-              control={control}
             />
           </div>
+
           <div className={"w-full flex flex-row justify-between gap-[1rem]"}>
             <Button
               variant={"contained"}

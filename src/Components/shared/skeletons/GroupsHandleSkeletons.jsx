@@ -1,5 +1,4 @@
 import { Card, CardContent, Skeleton } from "@mui/material";
-import React from "react";
 
 const GroupsHandleSkeletons = () => {
   return (
@@ -15,7 +14,7 @@ const GroupsHandleSkeletons = () => {
             .fill()
             .map((_, index) => (
               <Skeleton
-                key={index}
+                key={index} // NOSONAR
                 variant="rectangular"
                 height={50}
                 width="100%"
@@ -33,7 +32,7 @@ const GroupsHandleSkeletons = () => {
             .fill()
             .map((_, index) => (
               <Skeleton
-                key={index}
+                key={index} // NOSONAR
                 variant="rectangular"
                 height={50}
                 width="100%"

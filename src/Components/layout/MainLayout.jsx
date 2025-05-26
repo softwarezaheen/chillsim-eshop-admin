@@ -1,10 +1,7 @@
-import React from "react";
-import { Box, CssBaseline, useTheme } from "@mui/material";
+import { CssBaseline } from "@mui/material";
 import TopNav from "./TopNav";
 
 const MainLayout = ({ children }) => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
   return (
     <>
       <CssBaseline />

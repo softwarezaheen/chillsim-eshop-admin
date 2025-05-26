@@ -1,25 +1,20 @@
+import { Check, Close } from "@mui/icons-material";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Card,
   FormControl,
-  IconButton,
   TableCell,
   TablePagination,
   TextField,
-  Tooltip,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import React, { useEffect, useState } from "react";
-import SearchIcon from "@mui/icons-material/Search";
-import Loader from "../../Components/Loader/Loader";
-import MuiTable from "../../Components/Tables/MuiTable/MuiTable";
-import supabase from "../../core/apis/supabase";
-import { Check, Close, Visibility } from "@mui/icons-material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Filters from "../../Components/Filters/Filters";
 import { toast } from "react-toastify";
-import { getAllUsers } from "../../core/apis/usersAPI";
+import Filters from "../../Components/Filters/Filters";
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
+import { getAllUsers } from "../../core/apis/usersAPI";
 
 function UsersPage() {
   const navigate = useNavigate();
@@ -101,8 +96,11 @@ function UsersPage() {
         <Grid container size={{ xs: 12 }} spacing={2}>
           <Grid item size={{ xs: 12, sm: 3 }}>
             <FormControl fullWidth>
-              <label className="mb-2">Search</label>
+              <label className="mb-2" htmlFor="search-input">
+                Search
+              </label>
               <TextField
+                id="search-input"
                 fullWidth
                 required
                 size="small"

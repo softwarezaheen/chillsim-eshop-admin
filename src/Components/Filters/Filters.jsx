@@ -1,7 +1,14 @@
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Button, Collapse, IconButton, Typography, useTheme } from "@mui/material";
+import {
+  Button,
+  Collapse,
+  IconButton,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import React, { useState } from "react";
+import { useState } from "react";
+
 export default function Filters({
   children,
   onApply = () => {},
@@ -14,8 +21,7 @@ export default function Filters({
   },
   filterButtons = null,
 }) {
-
-  const [toggleFilter,setToggleFilter] = useState(true);
+  const [toggleFilter, setToggleFilter] = useState(true);
   const theme = useTheme();
   return (
     <Grid
@@ -26,44 +32,39 @@ export default function Filters({
         backgroundColor: theme.palette.background.default,
         padding: 2,
         marginBottom: 1,
-        width:"100%"
+        width: "100%",
       }}
     >
       <Grid container size={12} className="flex items-center gap-2">
-        <IconButton onClick={()=>setToggleFilter(!toggleFilter)}>
-        <FilterListIcon className="" />
+        <IconButton onClick={() => setToggleFilter(!toggleFilter)}>
+          <FilterListIcon className="" />
         </IconButton>
-      
+
         <Typography className="font-semibold">Filters</Typography>
       </Grid>
-      
-     <Collapse in={toggleFilter} sx={{width:'100%'}}>
-        <Grid container size={{ xs: 12,sm:12,md:12 }}  className="my-3">
-        {children}
-      </Grid>
-      <Grid size={{ xs: 12 }} className="flex justify-end gap-3 ">
-      {filterButtons ? (
-        filterButtons
-      ) : (
-        <>
-          <Button variant="outlined" onClick={onReset}>
-            {resetButtonName}
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={onApply}
-            disabled={applyDisable}
-          >
-            {applyButtonName}
-          </Button>
-        </>
-      )}
-    </Grid>
-    </Collapse>
-    
-    
-    
+
+      <Collapse in={toggleFilter} sx={{ width: "100%" }}>
+        <Grid container size={{ xs: 12, sm: 12, md: 12 }} className="my-3">
+          {children}
+        </Grid>
+        <Grid size={{ xs: 12 }} className="flex justify-end gap-3 ">
+          {filterButtons || (
+            <>
+              <Button variant="outlined" onClick={onReset}>
+                {resetButtonName}
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={onApply}
+                disabled={applyDisable}
+              >
+                {applyButtonName}
+              </Button>
+            </>
+          )}
+        </Grid>
+      </Collapse>
     </Grid>
   );
 }

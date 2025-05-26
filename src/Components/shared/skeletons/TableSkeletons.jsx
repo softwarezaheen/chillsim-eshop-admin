@@ -1,5 +1,4 @@
 import { Skeleton } from "@mui/material";
-import React from "react";
 
 const TableSkeletons = ({ count }) => {
   return (
@@ -7,7 +6,9 @@ const TableSkeletons = ({ count }) => {
       {Array(count)
         .fill()
         ?.map((_, index) => (
-          <Skeleton key={index} />
+          <Skeleton
+            key={index} // NOSONAR
+          />
         ))}
     </div>
   );

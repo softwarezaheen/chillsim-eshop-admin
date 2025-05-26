@@ -1,41 +1,17 @@
-import {
-  Brightness4 as DarkIcon,
-  Brightness7 as LightIcon,
-  Lock as LockIcon,
-  Person,
-} from "@mui/icons-material";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useForm, Controller } from "react-hook-form";
-import PersonIcon from "@mui/icons-material/Person";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import {
-  alpha,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Container,
-  IconButton,
-  InputAdornment,
-  Paper,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import { useFormik } from "formik";
-import React, { useState } from "react";
+import { Lock as LockIcon, Person } from "@mui/icons-material";
+import { Button, Card, CardContent, Typography } from "@mui/material";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import * as Yup from "yup";
-import supabase from "../../core/apis/supabase";
-import { toggleTheme } from "../../core/helpers/utilFunctions";
 import {
   FormInput,
   FormPassword,
 } from "../../Components/form-component/FormComponent";
-import { toast } from "react-toastify";
+import supabase from "../../core/apis/supabase";
 import { SignIn } from "../../Redux/reducers/AuthReducer";
 
 const validationSchema = Yup.object({
@@ -46,17 +22,9 @@ const validationSchema = Yup.object({
 export default function SignInPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
   const dispatch = useDispatch();
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    getValues,
-    formState: { errors },
-  } = useForm({
+  const { control, handleSubmit } = useForm({
     defaultValues: {
       email: "",
       password: "",
@@ -81,7 +49,9 @@ export default function SignInPage() {
         } else {
           dispatch(
             SignIn({
-              token: res.data.session.access_token,
+              access_token: res.data.session.access_token,
+              refresh_token: res?.data?.session?.refresh_token,
+              user_info: res.data.user,
             })
           );
           navigate("/users");

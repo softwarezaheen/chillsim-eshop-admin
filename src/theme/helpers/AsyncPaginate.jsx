@@ -38,18 +38,24 @@ export const AsyncPaginateTheme = ({ theme }) => {
       zIndex: 9999,
       position: "absolute",
     }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      backgroundColor: isSelected
-        ? alpha(theme.palette.primary.main, 0.4)
-        : isFocused
-        ? alpha(theme.palette.primary.main, 0.2)
-        : "transparent",
-      padding: "10px",
-      borderRadius: "16px",
-      cursor: "pointer",
-      transition: "background-color 0.2s ease",
-    }),
+    option: (base, { isFocused, isSelected }) => {
+      let backgroundColor = "transparent";
+
+      if (isSelected) {
+        backgroundColor = alpha(theme.palette.primary.main, 0.4);
+      } else if (isFocused) {
+        backgroundColor = alpha(theme.palette.primary.main, 0.2);
+      }
+
+      return {
+        ...base,
+        backgroundColor,
+        padding: "10px",
+        borderRadius: "16px",
+        cursor: "pointer",
+        transition: "background-color 0.2s ease",
+      };
+    },
     singleValue: (base) => ({
       ...base,
       color: theme.palette.text.primary,
@@ -71,7 +77,6 @@ export const AsyncPaginateTheme = ({ theme }) => {
     }),
     multiValue: (base) => ({
       ...base,
-      backgroundColor: "red",
       backgroundColor: isDarkMode
         ? "#1e293b"
         : alpha(theme.palette.primary.main, 0.1),

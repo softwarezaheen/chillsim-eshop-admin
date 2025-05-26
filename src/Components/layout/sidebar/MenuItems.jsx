@@ -1,15 +1,13 @@
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import {
-  alpha,
   Box,
   Collapse,
   ListItemButton,
   ListItemText,
-  useTheme,
+  useTheme
 } from "@mui/material";
-import React from "react";
 import { Link } from "react-router-dom";
 import { truncateText } from "../../../core/helpers/utilFunctions";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
 
 const MenuItems = ({
   item,

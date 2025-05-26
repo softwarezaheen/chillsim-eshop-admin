@@ -22,6 +22,7 @@ export const getAllDevices = async ({ page, pageSize, user }) => {
 
     return res;
   } catch (error) {
+    console.error("error in getAllDevices:", error);
     throw error;
   }
 };
@@ -43,6 +44,7 @@ export const getAllUserDevices = async ({ page, pageSize, id }) => {
 
     return res;
   } catch (error) {
+    console.error("error in getAllUserDevices:", error);
     throw error;
   }
 };
