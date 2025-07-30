@@ -109,6 +109,7 @@
   }
 
   :root {
+    
     --error: var(--color-error);
     --warning: var(--color-warning);
     --success: var(--color-success);

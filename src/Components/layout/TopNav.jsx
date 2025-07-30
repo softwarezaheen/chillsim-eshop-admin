@@ -45,11 +45,9 @@ export default function TopNav({ setOpenSide }) {
 
   const handleSignOut = async () => {
     await userSignout().then((res) => {
-      console.log(res, "ressssssssssss");
       if (res?.error) {
         console.log(res?.error?.code);
       } else {
-        console.log(res, "ressssssssssss222");
         dispatch(SignOut());
       }
     });

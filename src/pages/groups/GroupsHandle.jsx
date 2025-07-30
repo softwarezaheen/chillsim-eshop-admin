@@ -171,9 +171,8 @@ const GroupsHandle = () => {
       ...(id && { id: id }),
     })
       .then((res) => {
-        console.log(res, "resss");
         if (!res?.error) {
-          toast.success("Group added successfully");
+          toast.success(`Group ${id ? "edited" : "added"} successfully`);
           navigate(-1);
         } else {
           toast.error(res?.error || "An error occured");

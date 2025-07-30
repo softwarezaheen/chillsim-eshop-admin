@@ -12,7 +12,6 @@ import { store } from "./Redux/store";
 import MontyTheme from "./theme/MontyTheme";
 import themesConfig from "./theme/themesConfig";
 
-
 async function deleteDatabase(name) {
   return new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(name);
@@ -48,6 +47,7 @@ function App() {
   const theme =
     mode == "dark" ? themesConfig.defaultDark : themesConfig.default;
 
+  console.log("check done");
   useEffect(() => {
     const localPackageVersion = localStorage.getItem("PACKAGE_VERSION");
 

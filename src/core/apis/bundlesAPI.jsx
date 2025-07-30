@@ -6,7 +6,7 @@ export const getAllBundles = async (page, pageSize, name, tags) => {
   const to = from + pageSize - 1;
 
   try {
-    if (name.trim() === "" && tags?.length === 0) {
+    if (name?.trim() === "" && tags?.length === 0) {
       const res = await api(() => {
         let query = supabase.from("bundle").select("*", { count: "exact" });
         query = query.range(from, to).order("created_at", { ascending: true });
@@ -20,7 +20,7 @@ export const getAllBundles = async (page, pageSize, name, tags) => {
         let query = supabase.rpc("search_bundles", {
           p_page: page,
           p_page_size: pageSize,
-          p_search_term: name.trim(),
+          p_search_term: name?.trim(),
           p_tag_ids: tags,
         });
 
@@ -165,4 +165,28 @@ export const assignTagsToBundle = async (bundleId, tagIds) => {
   });
 
   return { error: deleteRes?.error || upsertRes?.error };
+};
+
+export const getAllBundlesDropdown = async ({
+  page = 1,
+  pageSize = 10,
+  search = "",
+} = {}) => {
+  try {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    const res = await api(() => {
+      let query = supabase.from("bundle").select(`data`, { count: "exact" });
+      if (search.trim() !== "") {
+        query = query.ilike("data->>bundle_code", `%${search}%`);
+      }
+
+      query = query.range(from, to).order("created_at", { ascending: true });
+      return query;
+    });
+    return res;
+  } catch (err) {
+    return { data: null, error: err, count: 0 };
+  }
 };

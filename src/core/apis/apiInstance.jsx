@@ -5,7 +5,8 @@ import supabase from "./supabase";
 
 export const api = async (callback) => {
   let { data, error, status, count } = await callback();
-  console.log(data, error, status, count, "llalala");
+
+  console.log(data, "dataa", error, "error");
 
   // If token expired or unauthorized
   if (status === 401 || (error && error?.message?.includes("JWT expired"))) {

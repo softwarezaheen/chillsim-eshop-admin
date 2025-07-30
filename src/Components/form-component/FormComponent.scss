@@ -1,0 +1,33 @@
+.form-date-picker {
+  display: flex;
+  flex-flow: column nowrap;
+
+  .react-date-range-picker {
+    input {
+      height: 40px;
+      width: 100%;
+      border-radius: 15px;
+      border: 1px solid rgba(0, 0, 0, 0.23);
+      color: black;
+      margin-left: 2px;
+    }
+    input:hover {
+      outline: none;
+      border: 1px solid var(--color-primary);
+    }
+    input:focus-visible {
+      outline: var(--color-primary) auto 0.5px;
+    }
+
+    input::placeholder {
+      color: rgba(0, 0, 0, 0.23);
+    }
+  }
+
+  .react-datepicker__close-icon::after {
+    background-color: var(--color-primary) !important;
+  }
+  .react-datepicker-popper button {
+    margin-top: 0px;
+  }
+}

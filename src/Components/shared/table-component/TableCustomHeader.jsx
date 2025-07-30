@@ -43,7 +43,7 @@ export function TableCustomHeader(props) {
         {actions && (
           <TableCell align="right">
             {onAdd && (
-              <Tooltip title={"Add new group"} placement={"top"}>
+              <Tooltip title={"Add new"} placement={"top"}>
                 <IconButton
                   color="primary"
                   aria-label="add"

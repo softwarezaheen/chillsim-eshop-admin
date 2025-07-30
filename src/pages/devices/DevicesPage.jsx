@@ -87,7 +87,7 @@ function DevicesPage() {
 
   const loadOptions = async (search, loadedOptions, { page }) => {
     const pageSize = 10;
-    const res = await getAllUsersDropdown({ page, pageSize, search });
+    const res = await getAllUsersDropdown({ page, pageSize, name: search });
     if (!res?.error) {
       return {
         options: res?.data?.map((item) => ({

@@ -6,6 +6,8 @@ import {
   Autocomplete,
   Avatar,
   CircularProgress,
+  FormControl,
+  FormHelperText,
   IconButton,
   InputAdornment,
   TextField,
@@ -13,6 +15,9 @@ import {
 import React, { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import AvatarEditorComponent from "../shared/avatar-editor/AvatarEditorComponent";
+import dayjs from "dayjs";
+import DatePicker from "react-datepicker";
+import "./FormComponent.scss";
 
 export const FormInput = (props) => {
   const {
@@ -23,6 +28,9 @@ export const FormInput = (props) => {
     onChange,
     helperText,
     disabled,
+    endAdornment,
+    value,
+    type = "text",
   } = props;
 
   return (
@@ -30,8 +38,9 @@ export const FormInput = (props) => {
       className={props.className}
       fullWidth
       onClick={onClick}
-      value={props.value}
+      value={value ?? ""}
       placeholder={placeholder}
+      type={type}
       variant={variant}
       onChange={(e) => onChange(e.target.value)}
       helperText={helperText}
@@ -40,6 +49,9 @@ export const FormInput = (props) => {
         input: {
           startAdornment: startAdornment ? (
             <InputAdornment position="start">{startAdornment}</InputAdornment>
+          ) : null,
+          endAdornment: endAdornment ? (
+            <InputAdornment position="end">{endAdornment}</InputAdornment>
           ) : null,
           autoComplete: "new-password",
           form: {
@@ -326,5 +338,43 @@ export const FormPaginationDropdownList = (props) => {
         />
       )}
     />
+  );
+};
+
+export const FormDateRange = (props) => {
+  const { value, onChange, disabled, helperText, placeholder } = props;
+
+  const startDate = value?.[0] ? new Date(value?.[0]) : null;
+  const endDate = value?.[1] ? new Date(value?.[1]) : null;
+
+  const handleDateChange = (dates) => {
+    const [start, end] = dates;
+
+    onChange([
+      start ? dayjs(start).format("YYYY-MM-DD") : null,
+      end ? dayjs(end).format("YYYY-MM-DD") : null,
+    ]);
+  };
+
+  return (
+    <div className="form-date-picker">
+      <DatePicker
+        selectsRange={true}
+        startDate={startDate}
+        endDate={endDate}
+        wrapperClassName="react-date-range-picker"
+        placeholderText={placeholder}
+        onChange={(update) => {
+          handleDateChange(update);
+        }}
+        disabled={disabled}
+        isClearable={disabled ? false : true}
+      />
+      {helperText !== "" && (
+        <FormControl>
+          <FormHelperText>{helperText}</FormHelperText>
+        </FormControl>
+      )}
+    </div>
   );
 };

@@ -11,6 +11,8 @@ import { truncateText } from "../../../core/helpers/utilFunctions";
 const ToolTipMenu = ({ item, IsActive }) => {
   const theme = useTheme();
   const primaryColor = theme.palette.primary.main;
+
+  console.log(item.children, "checkkk");
   return (
     <Tooltip
       key={item.recordGuid}
@@ -60,7 +62,7 @@ const ToolTipMenu = ({ item, IsActive }) => {
     >
       <ListItemButton
         sx={{
-          backgroundColor: IsActive(item) ? primaryColor : "transparent",
+          backgroundColor: "transparent",
           "&:hover": {},
           paddingY: 2,
           marginBottom: "1px",
@@ -74,6 +76,10 @@ const ToolTipMenu = ({ item, IsActive }) => {
             "&:hover": {
               color: primaryColor,
             },
+
+            color: IsActive(item)
+              ? theme.palette.secondary.main
+              : theme.palette.primary.main,
           }}
         />
       </ListItemButton>

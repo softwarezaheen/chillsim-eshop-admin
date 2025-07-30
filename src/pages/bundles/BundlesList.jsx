@@ -101,7 +101,7 @@ const BundleList = () => {
   };
 
   const tableHeaders = [
-    { name: "Id" },
+    { name: "ID" },
     { name: "Code" },
     { name: "Name" },
     { name: "Display Name" },

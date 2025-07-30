@@ -16,7 +16,7 @@ export const getAllUsers = async ({ page, pageSize, name }) => {
 
       return query;
     });
-    console.log(res, "resss");
+
     return res;
   } catch (error) {
     throw error;
@@ -33,11 +33,13 @@ export const getAllUsersDropdown = async ({
     const to = from + pageSize - 1;
 
     const res = await api(() => {
-      let query = supabase.from("users_copy").select("id, email, metadata");
+      let query = supabase
+        .from("users_copy")
+        .select("id, email, metadata")
+        .not("email", "eq", null);
       if (name.trim() !== "") {
-        query = query.or(
-          `email.ilike.%${name}%,metadata->>email.ilike.%${name}%`
-        );
+        console.log(name, "nameee");
+        query = query.or(`email.ilike.%${name}%`);
       }
 
       query = query.range(from, to).order("email", { ascending: true });

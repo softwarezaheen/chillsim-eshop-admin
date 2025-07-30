@@ -37,7 +37,7 @@ function OrdersPage() {
 
   const loadOptions = async (search, loadedOptions, { page }) => {
     const pageSize = 10;
-    const res = await getAllUsersDropdown({ page, pageSize, search });
+    const res = await getAllUsersDropdown({ page, pageSize, name: search });
     if (!res?.error) {
       return {
         options: res?.data?.map((item) => ({
@@ -119,6 +119,8 @@ function OrdersPage() {
     { name: "User Phone" },
     { name: "Bundle Name" },
     { name: "Amount" },
+    { name: "Promo Code" },
+    { name: "Referral Code" },
     { name: "Order Type" },
     { name: "Payment Status" },
     { name: "Created At" },
@@ -189,7 +191,7 @@ function OrdersPage() {
               sx={{ minWidth: "200px" }}
               className={"max-w-[250px] truncate"}
             >
-              {el?.bundle_data
+              {el?.bundle_data && el?.bundle_data !== "-"
                 ? JSON.parse(el?.bundle_data)?.display_title
                 : "N/A"}
             </TableCell>
@@ -200,10 +202,22 @@ function OrdersPage() {
               {el?.currency}{" "}
               <CountUp
                 start={0}
-                end={el?.amount}
+                end={el?.amount / 100} //because the amount is from stripe by cent
                 duration={1.5}
                 separator=","
               />
+            </TableCell>
+            <TableCell
+              sx={{ minWidth: "200px" }}
+              className={"max-w-[250px] truncate"}
+            >
+              {el?.promo_code || "N/A"}
+            </TableCell>
+            <TableCell
+              sx={{ minWidth: "200px" }}
+              className={"max-w-[250px] truncate"}
+            >
+              {el?.referral_code || "N/A"}
             </TableCell>
             <TableCell
               sx={{ minWidth: "200px" }}
