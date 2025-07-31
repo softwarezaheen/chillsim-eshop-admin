@@ -205,6 +205,7 @@ function OrdersPage() {
                 end={el?.amount / 100.0} //because the amount is from stripe by cent
                 duration={1.5}
                 separator=","
+                decimals={2}
               />
             </TableCell>
             <TableCell
