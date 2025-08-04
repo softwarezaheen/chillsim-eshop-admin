@@ -1,18 +1,13 @@
-import React from "react";
 //COMPONENTS
-import ContactusPage from "../../pages/contact-us/ContactusPage";
-import OrdersPage from "../../pages/orders/OrdersPage";
-import DevicesPage from "../../pages/devices/DevicesPage";
-import UsersPage from "../../pages/users/UsersPage";
+import PageNotFound from "../../Components/shared/fallbacks/page-not-found/PageNotFound";
 import SignInPage from "../../pages/authentication/SignInPage";
 import BundlesList from "../../pages/bundles/BundlesList";
-import RouteWrapper from "./RouteWrapper";
-import PageNotFound from "../../Components/shared/fallbacks/page-not-found/PageNotFound";
-import TagList from "../../pages/tags/TagList";
-import GroupsList from "../../pages/groups/GroupsList";
+import ContactusPage from "../../pages/contact-us/ContactusPage";
+import DevicesPage from "../../pages/devices/DevicesPage";
+import OrdersPage from "../../pages/orders/OrdersPage";
 import UserDetail from "../../pages/users/UserDetail";
-import GroupsHandle from "../../pages/groups/GroupsHandle";
-import AssignBundleToGroups from "../../pages/AssignBundleToGroups/AssignBundleToGroups";
+import UsersPage from "../../pages/users/UsersPage";
+import RouteWrapper from "./RouteWrapper";
 
 export const privateRoutes = [
   {
@@ -70,41 +65,6 @@ export const privateRoutes = [
         key: "/bundles",
         name: "Bundles",
         regex: "^/bundles/?$",
-      },
-      {
-        path: "/bundles/:bundleId/assign",
-        element: <AssignBundleToGroups />,
-        key: "/bundles/:bundleId/assign",
-        name: "Assign Bundle To Groups",
-        regex: "^/bundles/([0-9a-fA-F-]+)/assign?$",
-      },
-      {
-        path: "/groups",
-        element: <GroupsList />,
-        key: "/groups",
-        name: "Groups",
-        regex: "^/groups/?$",
-      },
-      {
-        path: "/groups/add",
-        element: <GroupsHandle />,
-        key: "/groups/add",
-        name: "Add Group",
-        regex: "^/groups/add?$",
-      },
-      {
-        path: "/groups/:id",
-        element: <GroupsHandle />,
-        key: "/groups/:id",
-        name: "Edit Group",
-        regex: "^/groups/([0-9a-fA-F-]+)$",
-      },
-      {
-        path: "/tags",
-        element: <TagList />,
-        key: "/tags",
-        name: "Tags",
-        regex: "^/tags/?$",
       },
       {
         path: "*",

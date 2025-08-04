@@ -82,24 +82,6 @@ export const MenuRoutes = [
       },
     ],
   },
-
-  {
-    parentName: null,
-    parentGuid: null,
-    displayOrder: 3,
-    uri: "groups",
-    iconUri: "fa-layer-group",
-    recordGuid: "6",
-    position: 100,
-    group: 1,
-    menuDetail: [
-      {
-        name: "Groups",
-        description: "Groups",
-        languageCode: "en",
-      },
-    ],
-  },
   {
     parentName: null,
     parentGuid: null,

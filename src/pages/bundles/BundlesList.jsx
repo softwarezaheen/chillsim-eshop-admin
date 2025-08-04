@@ -1,21 +1,19 @@
-import { Edit, Visibility } from "@mui/icons-material";
-import LayersIcon from "@mui/icons-material/Layers";
+import { Visibility } from "@mui/icons-material";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   Card,
   FormControl,
   Grid2,
   IconButton,
-  Switch,
   TableCell,
   TablePagination,
   TextField,
-  Tooltip,
+  Tooltip
 } from "@mui/material";
 import { useTheme } from "@mui/styles";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AsyncPaginate } from "react-select-async-paginate";
+
 import { toast } from "react-toastify";
 import Filters from "../../Components/Filters/Filters";
 import BundleDetail from "../../Components/page-component/bundles/BundleDetail";
@@ -23,7 +21,6 @@ import UpdateBundleName from "../../Components/page-component/bundles/UpdateBund
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
 import { getAllBundles, toggleBundleStatus } from "../../core/apis/bundlesAPI";
-import { getAllBundleTags } from "../../core/apis/tagsAPI";
 
 const BundleList = () => {
   const theme = useTheme();
@@ -105,7 +102,6 @@ const BundleList = () => {
     { name: "Code" },
     { name: "Name" },
     { name: "Display Name" },
-    { name: "Is Active" },
 
     { name: "" },
   ];
@@ -121,46 +117,12 @@ const BundleList = () => {
     });
   };
 
-  const loadTagsOptions = async (search, loadedOptions, { page }) => {
-    const pageSize = 10;
-
-    const res = await getAllBundleTags({ page, pageSize, search });
-    if (!res?.error) {
-      return {
-        options: res?.data?.map((item) => ({
-          ...item,
-          value: item.id,
-          label: item.title,
-        })),
-        hasMore: res?.data?.length === pageSize,
-        additional: {
-          page: page + 1,
-        },
-      };
-    } else {
-      return {
-        options: [...loadedOptions],
-        hasMore: false,
-        additional: {
-          page: page,
-        },
-      };
-    }
-  };
-
-  const handleNavigateAssignGroups = (el) => {
-    if (!el.id) {
-      return;
-    }
-    navigate(`/bundles/${el?.id}/assign`);
-  };
-
   return (
     <Card className="page-card">
       <Filters
         onReset={resetFilters}
         onApply={applyFilter}
-        applyDisable={(!search || search === "") && selectedTags?.length === 0}
+        applyDisable={!search || search === ""}
       >
         <Grid2 container size={{ xs: 12 }} spacing={2}>
           <Grid2 item size={{ xs: 12, sm: 3 }}>
@@ -187,34 +149,6 @@ const BundleList = () => {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                }}
-              />
-            </FormControl>
-          </Grid2>
-          <Grid2 item size={{ xs: 12, sm: 3 }}>
-            <FormControl fullWidth>
-              <label className="mb-2" htmlFor="tags-select">
-                Tags
-              </label>
-              <AsyncPaginate
-                inputId="tags-select"
-                isMulti={true}
-                isClearable={true}
-                value={selectedTags}
-                loadOptions={loadTagsOptions}
-                placeholder={"Select Tags"}
-                onChange={(value) => {
-                  if (!value) {
-                    resetFilters();
-                  } else {
-                    setSelectedTags(value);
-                  }
-                }}
-                additional={{ page: 1 }}
-                isSearchable
-                debounceTimeout={300}
-                styles={{
-                  ...asyncPaginateStyles,
                 }}
               />
             </FormControl>
@@ -255,38 +189,8 @@ const BundleList = () => {
             >
               {el?.bundle_name || "N/A"}
             </TableCell>
-            <TableCell sx={{ minWidth: "100px" }}>
-              <Switch
-                color="success"
-                checked={el?.is_active}
-                onChange={() => handleBundleStatus(el)}
-                name="is_active"
-              />
-            </TableCell>
 
             <TableCell className={"whitespace-nowrap"}>
-              <Tooltip title={"Assign Group"} placement={"top"}>
-                <IconButton
-                  color="primary"
-                  aria-label="assign"
-                  onClick={(event) => {
-                    handleNavigateAssignGroups(el);
-                  }}
-                >
-                  <LayersIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={"Edit Display Name"} placement={"top"}>
-                <IconButton
-                  color="primary"
-                  aria-label="edit"
-                  onClick={(event) => {
-                    setOpenUpdate({ open: true, data: el });
-                  }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Tooltip>
               <Tooltip title={"View Detail"} placement={"top"}>
                 <IconButton
                   color="primary"
