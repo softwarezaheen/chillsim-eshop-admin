@@ -101,8 +101,6 @@ const BundleList = () => {
     { name: "ID" },
     { name: "Code" },
     { name: "Name" },
-    { name: "Display Name" },
-
     { name: "" },
   ];
 
@@ -182,12 +180,6 @@ const BundleList = () => {
               className={"max-w-[250px] truncate"}
             >
               {el?.data?.bundle_name || "N/A"}
-            </TableCell>
-            <TableCell
-              sx={{ minWidth: "200px" }}
-              className={"max-w-[250px] truncate"}
-            >
-              {el?.bundle_name || "N/A"}
             </TableCell>
 
             <TableCell className={"whitespace-nowrap"}>
