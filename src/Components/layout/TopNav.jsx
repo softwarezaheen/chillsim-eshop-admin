@@ -114,6 +114,9 @@ export default function TopNav({ setOpenSide }) {
           horizontal: "right",
         }}
       >
+        <MenuItem onClick={() => navigate("/change-password")}>
+          <AccountCircleIcon fontSize="small" sx={{ mr: 1 }} /> Change Password
+        </MenuItem>
         <MenuItem onClick={handleSignOut}>
           <LogoutIcon fontSize="small" sx={{ mr: 1 }} /> Logout
         </MenuItem>

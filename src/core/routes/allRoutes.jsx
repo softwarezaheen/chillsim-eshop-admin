@@ -8,6 +8,7 @@ import OrdersPage from "../../pages/orders/OrdersPage";
 import UserDetail from "../../pages/users/UserDetail";
 import UsersPage from "../../pages/users/UsersPage";
 import RouteWrapper from "./RouteWrapper";
+import ChangePasswordPage from "../../pages/authentication/ChangePasswordPage";
 
 export const privateRoutes = [
   {
@@ -65,6 +66,13 @@ export const privateRoutes = [
         key: "/bundles",
         name: "Bundles",
         regex: "^/bundles/?$",
+      },
+      {
+        path: "/change-password",
+        element: <ChangePasswordPage />,
+        key: "/change-password",
+        name: "Change Password",
+        regex: "^/change-password/?$",
       },
       {
         path: "*",
