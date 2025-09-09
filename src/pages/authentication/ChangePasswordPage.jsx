@@ -7,9 +7,18 @@ import supabase from "../../core/apis/supabase";
 import { toast } from "react-toastify";
 import { useState } from "react";
 
+// Regex: min 8 chars, at least 1 uppercase, 1 lowercase, 1 number, 1 special char
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]{8,}$/;
+
 const validationSchema = Yup.object({
   currentPassword: Yup.string().required("Current password is required"),
-  newPassword: Yup.string().min(6, "Min 6 characters").required("New password is required"),
+  newPassword: Yup.string()
+    .matches(passwordRegex, "Password must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character")
+    .required("New password is required"),
+  verifyPassword: Yup.string()
+    .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
+    .required("Please confirm your new password"),
 });
 
 export default function ChangePasswordPage() {
@@ -19,6 +28,7 @@ export default function ChangePasswordPage() {
     defaultValues: {
       currentPassword: "",
       newPassword: "",
+      verifyPassword: "",
     },
     resolver: yupResolver(validationSchema),
     mode: "all",
@@ -92,6 +102,23 @@ export default function ChangePasswordPage() {
                   />
                 )}
                 name="newPassword"
+                control={control}
+              />
+            </div>
+            <div>
+              <label htmlFor="verifyPassword" className="block text-sm font-medium mb-2">
+                Verify New Password
+              </label>
+              <Controller
+                render={({ field: { onChange, value }, fieldState: { error } }) => (
+                  <FormPassword
+                    placeholder="Re-enter new password"
+                    value={value}
+                    helperText={error?.message}
+                    onChange={onChange}
+                  />
+                )}
+                name="verifyPassword"
                 control={control}
               />
             </div>
