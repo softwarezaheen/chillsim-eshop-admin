@@ -13,6 +13,7 @@ import GroupsList from "../../pages/groups/GroupsList";
 import UserDetail from "../../pages/users/UserDetail";
 import GroupsHandle from "../../pages/groups/GroupsHandle";
 import AssignBundleToGroups from "../../pages/AssignBundleToGroups/AssignBundleToGroups";
+import ChangePasswordPage from "../../pages/authentication/ChangePasswordPage";
 
 export const privateRoutes = [
   {
@@ -105,6 +106,13 @@ export const privateRoutes = [
         key: "/tags",
         name: "Tags",
         regex: "^/tags/?$",
+      },
+      {
+        path: "/change-password",
+        element: <ChangePasswordPage />,
+        key: "/change-password",
+        name: "Change Password",
+        regex: "^/change-password/?$",
       },
       {
         path: "*",
