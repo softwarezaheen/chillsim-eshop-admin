@@ -28,22 +28,62 @@ export default function VouchersList() {
   const [createdEnd, setCreatedEnd] = useState(null);
   const [updatedStart, setUpdatedStart] = useState(null);
   const [updatedEnd, setUpdatedEnd] = useState(null);
+  const [usedBy, setUsedBy] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [selected, setSelected] = useState([]);
   const [bulkDialog, setBulkDialog] = useState({ open: false, action: null });
   const [exportLoading, setExportLoading] = useState(false);
-  const isAllSelected = totalRows > 0 && selected.length === totalRows;
+  const [exportedStart, setExportedStart] = useState(null);
+  const [exportedEnd, setExportedEnd] = useState(null);
+  const isAllSelected = selected.length > 0 && totalRows > 0 && selected.length === totalRows;
   const handleSelectAll = async (e) => {
     if (e.target.checked) {
-      // Fetch all matching voucher IDs (across all pages)
-      let query = supabase.from("voucher").select("id");
+      // Fetch all filtered voucher IDs (ignore pagination)
+      let query = supabase
+        .from("voucher")
+        .select("id", { count: "exact" });
       if (search.trim()) {
-        query = query.ilike("code", `%${search}%`);
+        const cleanedSearch = search.replace(/[-\s]/g, "");
+        query = query.ilike("code", `%${cleanedSearch}%`);
+      }
+      if (partner) {
+        if (partner === "NONE") {
+          query = query.is("partner_id", null);
+        } else {
+          query = query.eq("partner_id", partner);
+        }
+      }
+      if (used) {
+        query = query.eq("is_used", used === "yes");
+      }
+      if (active) {
+        query = query.eq("is_active", active === "yes");
+      }
+      if (exported) {
+        query = query.eq("exported", exported === "yes");
+      }
+      if (createdStart) {
+        query = query.gte("created_at", createdStart.toISOString());
+      }
+      if (createdEnd) {
+        query = query.lte("created_at", createdEnd.toISOString());
+      }
+      if (updatedStart) {
+        query = query.gte("updated_at", updatedStart.toISOString());
+      }
+      if (updatedEnd) {
+        query = query.lte("updated_at", updatedEnd.toISOString());
+      }
+      if (exportedStart) {
+        query = query.gte("exported_at", exportedStart.toISOString());
+      }
+      if (exportedEnd) {
+        query = query.lte("exported_at", exportedEnd.toISOString());
       }
       const { data, error } = await query;
-      if (!error && Array.isArray(data)) {
+      if (!error && data) {
         setSelected(data.map(v => v.id));
       }
     } else {
@@ -129,7 +169,12 @@ export default function VouchersList() {
 
   useEffect(() => {
     fetchVouchers();
-  }, [search, partner, used, active, exported, createdStart, createdEnd, updatedStart, updatedEnd, page, pageSize]);
+  }, [search, partner, used, active, exported, createdStart, createdEnd, updatedStart, updatedEnd, exportedStart, exportedEnd, usedBy, page, pageSize]);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    setSelected([]);
+  }, [search, partner, used, active, exported, createdStart, createdEnd, updatedStart, updatedEnd, usedBy]);
 
   useEffect(() => {
     async function loadPartners() {
@@ -140,7 +185,7 @@ export default function VouchersList() {
   }, []);
 
   const fetchVouchers = async () => {
-    setLoading(true);
+  setLoading(true);
     let query = supabase
       .from("voucher")
       .select("*, partners(name)", { count: "exact" })
@@ -179,9 +224,40 @@ export default function VouchersList() {
     if (updatedEnd) {
       query = query.lte("updated_at", updatedEnd.toISOString());
     }
+    if (exportedStart) {
+      query = query.gte("exported_at", exportedStart.toISOString());
+    }
+    if (exportedEnd) {
+      query = query.lte("exported_at", exportedEnd.toISOString());
+    }
     const { data, error, count } = await query;
+    let vouchersData = data || [];
+    // JS-side merge for user emails
+    if (vouchersData.length > 0) {
+      const usedByIds = [...new Set(vouchersData.map(v => v.used_by).filter(Boolean))];
+      if (usedByIds.length > 0) {
+        const { data: usersData, error: usersError } = await supabase
+          .from("users_copy")
+          .select("id, email")
+          .in("id", usedByIds);
+        if (!usersError && usersData) {
+          const userMap = Object.fromEntries(usersData.map(u => [u.id, u.email]));
+          vouchersData = vouchersData.map(v => ({ ...v, user_email: userMap[v.used_by] || null }));
+        }
+      }
+    }
+    // JS-side filter for Used By
+    if (usedBy.trim()) {
+      const filterVal = usedBy.trim().toLowerCase();
+      vouchersData = vouchersData.filter(v => {
+        // Check both user_email and used_by columns
+        const email = (v.user_email || "").toLowerCase();
+        const id = (v.used_by || "").toLowerCase();
+        return email.includes(filterVal) || id.includes(filterVal);
+      });
+    }
     if (!error) {
-      setVouchers(data || []);
+      setVouchers(vouchersData);
       setTotalRows(count || 0);
     }
     setLoading(false);
@@ -206,7 +282,11 @@ export default function VouchersList() {
           setCreatedEnd(null);
           setUpdatedStart(null);
           setUpdatedEnd(null);
+          setExportedStart(null);
+          setExportedEnd(null);
+          setUsedBy("");
           setPage(0);
+          fetchVouchers();
         }}
         onApply={() => {
           setPage(0);
@@ -221,6 +301,15 @@ export default function VouchersList() {
               onChange={e => setSearch(e.target.value)}
               size="medium"
               placeholder="Search by code"
+              InputProps={{ startAdornment: <span style={{ marginRight: 8 }}>🔍</span> }}
+              style={{ minWidth: 180, height: 48 }}
+            />
+            <TextField
+              label="Used By (Email or User ID)"
+              value={usedBy}
+              onChange={e => setUsedBy(e.target.value)}
+              size="medium"
+              placeholder="Search by email or user ID"
               InputProps={{ startAdornment: <span style={{ marginRight: 8 }}>🔍</span> }}
               style={{ minWidth: 180, height: 48 }}
             />
@@ -274,6 +363,13 @@ export default function VouchersList() {
                 <CustomDatePicker value={updatedEnd} onChange={setUpdatedEnd} label="End" size="medium" style={{ width: 100 }} />
               </div>
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#f7f7fa', borderRadius: 8, padding: 12, minWidth: 220 }}>
+              <InputLabel style={{ marginBottom: 4 }}>Exported Date Range</InputLabel>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <CustomDatePicker value={exportedStart} onChange={setExportedStart} label="Start" size="medium" style={{ width: 100 }} />
+                <CustomDatePicker value={exportedEnd} onChange={setExportedEnd} label="End" size="medium" style={{ width: 100 }} />
+              </div>
+            </div>
           </div>
         </div>
       </Filters>
@@ -290,7 +386,6 @@ export default function VouchersList() {
                     <TableCell padding="checkbox">
                       <Checkbox checked={isAllSelected} onChange={handleSelectAll} />
                     </TableCell>
-                    <TableCell>ID</TableCell>
                     <TableCell>Code</TableCell>
                     <TableCell>Amount</TableCell>
                     <TableCell>Used</TableCell>
@@ -307,7 +402,7 @@ export default function VouchersList() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={13} align="center">
+                      <TableCell colSpan={12} align="center">
                         <CircularProgress />
                       </TableCell>
                     </TableRow>
@@ -316,13 +411,17 @@ export default function VouchersList() {
                       <TableCell padding="checkbox">
                         <Checkbox checked={selected.includes(voucher.id)} onChange={() => handleSelectOne(voucher.id)} />
                       </TableCell>
-                      <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 80 }}>{voucher.id}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 180, maxWidth: 400 }}>{formatCode(voucher.code)}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 80 }}>{voucher.amount}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 80 }}>{voucher.is_used ? "Yes" : "No"}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 80 }}>{voucher.is_active ? "Yes" : "No"}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{voucher.partners?.name || ""}</TableCell>
-                      <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>{voucher.used_by || ""}</TableCell>
+                      <TableCell>
+                        {voucher.user_email
+                          ? <span>{voucher.user_email}</span>
+                          : <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120, display: 'inline-block' }}>{voucher.used_by || ""}</span>
+                        }
+                      </TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{voucher.created_at ? new Date(voucher.created_at).toLocaleString() : ""}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{voucher.updated_at ? new Date(voucher.updated_at).toLocaleString() : ""}</TableCell>
                       <TableCell style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{voucher.expired_at ? new Date(voucher.expired_at).toLocaleString() : ""}</TableCell>

@@ -14,11 +14,13 @@ import supabase from "./supabase";
 
 export const bulkExpireVouchers = async (ids) => {
   const now = new Date().toISOString();
+  // Only expire vouchers that are not used
   return await api(() =>
     supabase
       .from("voucher")
-      .update({ updated_at: now, expired_at: now })
+      .update({ updated_at: now, expired_at: now, is_active: false })
       .in("id", ids)
+      .is("is_used", false)
   );
 };
 
