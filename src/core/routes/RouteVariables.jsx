@@ -99,4 +99,38 @@ export const MenuRoutes = [
       },
     ],
   },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 4,
+    uri: "partners",
+    iconUri: "fa-users",
+    recordGuid: "6",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Partners",
+        description: "Partners",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 5,
+    uri: "vouchers",
+    iconUri: "fa-ticket",
+    recordGuid: "7",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Vouchers",
+        description: "Vouchers",
+        languageCode: "en",
+      },
+    ],
+  },
 ];

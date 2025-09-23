@@ -5,13 +5,13 @@ import { privateRoutes, publicRoutes } from "./allRoutes";
 const AppRouter = () => {
   return (
     <Routes>
-      {privateRoutes?.map((route) =>
+      {privateRoutes?.map((route, i) =>
         route?.children ? (
-          <Route key={route.path} path={route.path} element={route.element}>
-            {route.children.map((child) => (
+          <Route key={route.path || i} path={route.path} element={route.element}>
+            {route.children.map((child, j) => (
               <Route
                 index={child?.index}
-                key={child.path}
+                key={child.path ? `${child.path}-${j}` : j}
                 path={child.path}
                 element={child.element}
               />
@@ -19,20 +19,20 @@ const AppRouter = () => {
           </Route>
         ) : (
           <Route
-            key={route.path}
+            key={route.path || i}
             index={route?.index}
             element={route?.element}
           />
         )
       )}
 
-      {publicRoutes?.map((route) =>
+      {publicRoutes?.map((route, i) =>
         route?.children ? (
-          <Route key={route.path} path={route.path} element={route.element}>
-            {route.children.map((child) => (
+          <Route key={route.path || i} path={route.path} element={route.element}>
+            {route.children.map((child, j) => (
               <Route
                 index={child?.index}
-                key={child.path}
+                key={child.path ? `${child.path}-${j}` : j}
                 path={child.path}
                 element={child.element}
               />
@@ -40,7 +40,7 @@ const AppRouter = () => {
           </Route>
         ) : (
           <Route
-            key={route.path}
+            key={route.path || i}
             index={route?.index}
             element={route?.element}
           />
