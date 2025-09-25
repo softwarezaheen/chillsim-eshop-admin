@@ -1,4 +1,4 @@
-import { FormHelperText, Grid } from "@mui/material";
+import { FormHelperText, Grid, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -13,6 +13,7 @@ export default function CustomDatePicker({
   disabled = false,
   minDate = null,
   maxDate = null,
+  label = null,
 }) {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === "dark";
@@ -26,9 +27,14 @@ export default function CustomDatePicker({
   } else {
     className = "date-picker-light";
   }
-  
+
   return (
     <Grid item xs={12} sm={6} className={className}>
+      {label && (
+        <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+          {label}
+        </Typography>
+      )}
       <DatePicker
         selected={value}
         onChange={onChange}

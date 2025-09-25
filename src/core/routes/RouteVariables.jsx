@@ -133,4 +133,21 @@ export const MenuRoutes = [
       },
     ],
   },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 6,
+    uri: "promotions",
+    iconUri: "fa-gift",
+    recordGuid: "8",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Promotions",
+        description: "Promotions",
+        languageCode: "en",
+      },
+    ],
+  },
 ];

@@ -11,6 +11,7 @@ import RouteWrapper from "./RouteWrapper";
 import ChangePasswordPage from "../../pages/authentication/ChangePasswordPage";
 import VouchersList from "../../pages/vouchers/VouchersList";
 import Partners from "../../pages/partners/Partners";
+import PromotionsPage from "../../pages/promotions/PromotionsPage";
 
 export const privateRoutes = [
   {
@@ -89,6 +90,13 @@ export const privateRoutes = [
         key: "/vouchers",
         name: "Vouchers",
         regex: "^/vouchers/?$",
+      },
+      {
+        path: "/promotions",
+        element: <PromotionsPage />,
+        key: "/promotions",
+        name: "Promotions",
+        regex: "^/promotions/?$",
       },
       {
         path: "*",
