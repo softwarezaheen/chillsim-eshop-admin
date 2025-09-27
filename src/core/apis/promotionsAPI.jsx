@@ -2,6 +2,34 @@ import { api } from "./apiInstance";
 import supabase from "./supabase";
 
 export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
+  // First get filtered count to check if we need to adjust page offset
+  let countQuery = supabase.from("promotion").select("*", { count: "exact", head: true });
+  
+  // Apply the same filters to count query
+  if (filters.code) {
+    countQuery = countQuery.ilike("code", `%${filters.code}%`);
+  }
+  if (filters.is_active !== undefined) {
+    countQuery = countQuery.eq("is_active", filters.is_active);
+  }
+  if (filters.type) {
+    countQuery = countQuery.eq("type", filters.type);
+  }
+  if (filters.valid_from) {
+    countQuery = countQuery.gte("valid_from", filters.valid_from);
+  }
+  if (filters.valid_to) {
+    countQuery = countQuery.lte("valid_to", filters.valid_to);
+  }
+
+  const { count: filteredCount } = await api(() => countQuery);
+
+  // Adjust page if offset exceeds available filtered rows
+  let adjustedPage = page;
+  if (filteredCount && page * pageSize >= filteredCount) {
+    adjustedPage = Math.max(0, Math.floor((filteredCount - 1) / pageSize));
+  }
+
   let query = supabase
     .from("promotion")
     .select(`
@@ -10,6 +38,7 @@ export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
         id,
         max_usage,
         beneficiary,
+        rule_description,
         promotion_rule_action (name),
         promotion_rule_event (name)
       )
@@ -32,20 +61,34 @@ export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
     query = query.lte("valid_to", filters.valid_to);
   }
 
-  query = query.range(page * pageSize, (page + 1) * pageSize - 1).order("created_at", { ascending: false });
+  query = query.range(adjustedPage * pageSize, (adjustedPage + 1) * pageSize - 1).order("created_at", { ascending: false });
 
-  return await api(() => query);
+  const result = await api(() => query);
+  return { ...result, adjustedPage };
 };
 
 export const getPromotionUsages = async (filters = {}, page = 0, pageSize = 10) => {
-  // First, get the promotion usages
+  // First get promotion usages with bundle and promotion joins
   let query = supabase
     .from("promotion_usage")
-    .select("*", { count: "exact" });
+    .select(`
+      *,
+      bundle:bundle_id (
+        id,
+        data
+      ),
+      promotion:promotion_code (
+        code,
+        name
+      )
+    `, { count: "exact" });
 
   // Apply filters
   if (filters.promotion_code) {
     query = query.ilike("promotion_code", `%${filters.promotion_code}%`);
+  }
+  if (filters.referral_code) {
+    query = query.ilike("referral_code", `%${filters.referral_code}%`);
   }
   if (filters.status) {
     query = query.eq("status", filters.status);
@@ -60,55 +103,72 @@ export const getPromotionUsages = async (filters = {}, page = 0, pageSize = 10) 
     query = query.lte("created_at", filters.created_to);
   }
 
-  query = query.range(page * pageSize, (page + 1) * pageSize - 1).order("created_at", { ascending: false });
+  // Get filtered count first to check if we need to adjust page offset
+  let countQuery = supabase.from("promotion_usage").select("*", { count: "exact", head: true });
+  
+  // Apply the same filters to count query
+  if (filters.promotion_code) {
+    countQuery = countQuery.ilike("promotion_code", `%${filters.promotion_code}%`);
+  }
+  if (filters.referral_code) {
+    countQuery = countQuery.ilike("referral_code", `%${filters.referral_code}%`);
+  }
+  if (filters.status) {
+    countQuery = countQuery.eq("status", filters.status);
+  }
+  if (filters.user_id) {
+    countQuery = countQuery.eq("user_id", filters.user_id);
+  }
+  if (filters.created_from) {
+    countQuery = countQuery.gte("created_at", filters.created_from);
+  }
+  if (filters.created_to) {
+    countQuery = countQuery.lte("created_at", filters.created_to);
+  }
+
+  const { count: filteredCount } = await api(() => countQuery);
+
+  // Adjust page if offset exceeds available filtered rows
+  let adjustedPage = page;
+  if (filteredCount && page * pageSize >= filteredCount) {
+    adjustedPage = Math.max(0, Math.floor((filteredCount - 1) / pageSize));
+  }
+
+  query = query.range(adjustedPage * pageSize, (adjustedPage + 1) * pageSize - 1).order("created_at", { ascending: false });
 
   const { data: usages, error: usagesError, count } = await api(() => query);
 
   if (usagesError || !usages) {
-    return { data: null, error: usagesError, count: 0 };
+    return { data: null, error: usagesError, count: 0, adjustedPage };
   }
 
-  // Get unique bundle_ids and promotion_codes
-  const bundleIds = [...new Set(usages.map(u => u.bundle_id).filter(id => id))];
-  const promotionCodes = [...new Set(usages.map(u => u.promotion_code).filter(code => code))];
-
-  // Fetch bundles
-  let bundles = [];
-  if (bundleIds.length > 0) {
-    const { data: bundleData } = await api(() => 
-      supabase.from("bundle").select("id, name").in("id", bundleIds)
+  // Fetch user emails separately since users_copy might not support foreign key joins
+  const userIds = [...new Set(usages.map(u => u.user_id).filter(id => id))];
+  let users = [];
+  if (userIds.length > 0) {
+    const { data: userData } = await api(() => 
+      supabase.from("users_copy").select("id, email").in("id", userIds)
     );
-    bundles = bundleData || [];
+    users = userData || [];
   }
 
-  // Fetch promotions
-  let promotions = [];
-  if (promotionCodes.length > 0) {
-    const { data: promoData } = await api(() => 
-      supabase.from("promotion").select("code, name").in("code", promotionCodes)
-    );
-    promotions = promoData || [];
-  }
-
-  // Create lookup maps
-  const bundleMap = bundles.reduce((acc, bundle) => {
-    acc[bundle.id] = bundle;
+  const userMap = users.reduce((acc, user) => {
+    acc[user.id] = user;
     return acc;
   }, {});
 
-  const promotionMap = promotions.reduce((acc, promo) => {
-    acc[promo.code] = promo;
-    return acc;
-  }, {});
-
-  // Enrich usages with bundle and promotion data
+  // Process the joined data
   const enrichedUsages = usages.map(usage => ({
     ...usage,
-    bundle: usage.bundle_id ? bundleMap[usage.bundle_id] : null,
-    promotion: usage.promotion_code ? promotionMap[usage.promotion_code] : null,
+    bundle: usage.bundle_id && usage.bundle ? {
+      id: usage.bundle.id,
+      bundle_name: usage.bundle.data?.bundle_name || null
+    } : null,
+    promotion: usage.promotion || null,
+    user: usage.user_id ? userMap[usage.user_id] : null,
   }));
 
-  return { data: enrichedUsages, error: null, count };
+  return { data: enrichedUsages, error: null, count, adjustedPage };
 };
 
 export const addPromotion = async (promotionData) => {
@@ -141,4 +201,18 @@ export const updatePromotionRule = async (id, ruleData) => {
 
 export const deletePromotionRule = async (id) => {
   return await api(() => supabase.from("promotion_rule").delete().eq("id", id));
+};
+
+export const expirePromotion = async (code) => {
+  const currentDate = new Date().toISOString();
+  return await api(() => 
+    supabase
+      .from("promotion")
+      .update({ 
+        valid_to: currentDate,
+        is_active: false 
+      })
+      .eq("code", code)
+      .select()
+  );
 };

@@ -16,6 +16,7 @@ import {
   addPromotionRule,
   updatePromotionRule,
   deletePromotionRule,
+  expirePromotion,
 } from '../../core/apis/promotionsAPI';
 
 const PromotionsPage = () => {
@@ -52,6 +53,7 @@ const PromotionsPage = () => {
     promotion_rule_event_id: '',
     max_usage: 1,
     beneficiary: 0,
+    rule_description: '',
   });
 
   useEffect(() => {
@@ -81,12 +83,16 @@ const PromotionsPage = () => {
       processedFilters.valid_to = new Date(processedFilters.valid_to).toISOString().split('T')[0];
     }
     
-    const { data, error, count } = await getPromotions(processedFilters, page, pageSize);
+    const { data, error, count, adjustedPage } = await getPromotions(processedFilters, page, pageSize);
     if (error) {
       toast.error('Failed to fetch promotions');
     } else {
       setPromotions(data || []);
       setTotalRows(count || 0);
+      // Update page if it was adjusted due to pagination overflow
+      if (adjustedPage !== undefined && adjustedPage !== page) {
+        setPage(adjustedPage);
+      }
     }
     setLoading(false);
   };
@@ -102,12 +108,16 @@ const PromotionsPage = () => {
       processedFilters.created_to = new Date(processedFilters.created_to).toISOString().split('T')[0];
     }
     
-    const { data, error, count } = await getPromotionUsages(processedFilters, page, pageSize);
+    const { data, error, count, adjustedPage } = await getPromotionUsages(processedFilters, page, pageSize);
     if (error) {
       toast.error('Failed to fetch promotion usages');
     } else {
       setUsages(data || []);
       setTotalRows(count || 0);
+      // Update page if it was adjusted due to pagination overflow
+      if (adjustedPage !== undefined && adjustedPage !== page) {
+        setPage(adjustedPage);
+      }
     }
     setLoading(false);
   };
@@ -194,8 +204,10 @@ const PromotionsPage = () => {
         promotion_rule_event_id: '',
         max_usage: 1,
         beneficiary: 0,
+        rule_description: '',
       });
       fetchRules();
+      fetchPromotionRules(); // Reload promotion rules for the add promotion dialog
     }
   };
 
@@ -212,8 +224,10 @@ const PromotionsPage = () => {
         promotion_rule_event_id: '',
         max_usage: 1,
         beneficiary: 0,
+        rule_description: '',
       });
       fetchRules();
+      fetchPromotionRules(); // Reload promotion rules for the add promotion dialog
     }
   };
 
@@ -225,6 +239,7 @@ const PromotionsPage = () => {
       } else {
         toast.success('Promotion rule deleted successfully');
         fetchRules();
+        fetchPromotionRules(); // Reload promotion rules for the add promotion dialog
       }
     }
   };
@@ -236,6 +251,7 @@ const PromotionsPage = () => {
       promotion_rule_event_id: rule.promotion_rule_event_id,
       max_usage: rule.max_usage,
       beneficiary: rule.beneficiary,
+      rule_description: rule.rule_description || '',
     });
     setRuleDialogOpen(true);
   };
@@ -247,6 +263,7 @@ const PromotionsPage = () => {
       promotion_rule_event_id: '',
       max_usage: 1,
       beneficiary: 0,
+      rule_description: '',
     });
     setRuleDialogOpen(true);
   };
@@ -269,6 +286,18 @@ const PromotionsPage = () => {
   const handlePageSizeChange = (event) => {
     setPageSize(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleExpirePromotion = async (code) => {
+    if (window.confirm(`Are you sure you want to expire promotion code "${code}"?`)) {
+      const { error } = await expirePromotion(code);
+      if (error) {
+        toast.error('Failed to expire promotion');
+      } else {
+        toast.success('Promotion expired successfully');
+        fetchPromotions();
+      }
+    }
   };
 
   return (
@@ -299,6 +328,7 @@ const PromotionsPage = () => {
             handlePageChange={handlePageChange}
             handlePageSizeChange={handlePageSizeChange}
             onAddPromotion={() => setAddDialogOpen(true)}
+            onExpirePromotion={handleExpirePromotion}
           />
         )}
 

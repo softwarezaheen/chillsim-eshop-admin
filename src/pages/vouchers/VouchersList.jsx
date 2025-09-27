@@ -186,12 +186,63 @@ export default function VouchersList() {
 
   const fetchVouchers = async () => {
   setLoading(true);
+    // First get filtered count to check if we need to adjust page offset
+    let countQuery = supabase.from("voucher").select("*", { count: "exact", head: true });
+    
+    // Apply the same filters to count query
+    if (search.trim()) {
+      const cleanedSearch = search.replace(/[-\s]/g, "");
+      countQuery = countQuery.ilike("code", `%${cleanedSearch}%`);
+    }
+    if (partner) {
+      if (partner === "NONE") {
+        countQuery = countQuery.is("partner_id", null);
+      } else {
+        countQuery = countQuery.eq("partner_id", partner);
+      }
+    }
+    if (used) {
+      countQuery = countQuery.eq("is_used", used === "yes");
+    }
+    if (active) {
+      countQuery = countQuery.eq("is_active", active === "yes");
+    }
+    if (exported) {
+      countQuery = countQuery.eq("exported", exported === "yes");
+    }
+    if (createdStart) {
+      countQuery = countQuery.gte("created_at", createdStart.toISOString());
+    }
+    if (createdEnd) {
+      countQuery = countQuery.lte("created_at", createdEnd.toISOString());
+    }
+    if (updatedStart) {
+      countQuery = countQuery.gte("updated_at", updatedStart.toISOString());
+    }
+    if (updatedEnd) {
+      countQuery = countQuery.lte("updated_at", updatedEnd.toISOString());
+    }
+    if (exportedStart) {
+      countQuery = countQuery.gte("exported_at", exportedStart.toISOString());
+    }
+    if (exportedEnd) {
+      countQuery = countQuery.lte("exported_at", exportedEnd.toISOString());
+    }
+
+    const { count: filteredCount } = await countQuery;
+
+    // Adjust page if offset exceeds available filtered rows
+    let adjustedPage = page;
+    if (filteredCount && page * pageSize >= filteredCount) {
+      adjustedPage = Math.max(0, Math.floor((filteredCount - 1) / pageSize));
+    }
+
     let query = supabase
       .from("voucher")
       .select("*, partners(name)", { count: "exact" })
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
-      .range(page * pageSize, page * pageSize + pageSize - 1);
+      .range(adjustedPage * pageSize, adjustedPage * pageSize + pageSize - 1);
     if (search.trim()) {
       const cleanedSearch = search.replace(/[-\s]/g, "");
       query = query.ilike("code", `%${cleanedSearch}%`);
@@ -259,6 +310,10 @@ export default function VouchersList() {
     if (!error) {
       setVouchers(vouchersData);
       setTotalRows(count || 0);
+      // Update page if it was adjusted due to pagination overflow
+      if (adjustedPage !== undefined && adjustedPage !== page) {
+        setPage(adjustedPage);
+      }
     }
     setLoading(false);
   };

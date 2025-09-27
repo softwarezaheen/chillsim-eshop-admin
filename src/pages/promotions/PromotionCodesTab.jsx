@@ -26,7 +26,21 @@ const PromotionCodesTab = ({
   handlePageChange,
   handlePageSizeChange,
   onAddPromotion,
+  onExpirePromotion,
 }) => {
+  const isExpired = (promotion) => {
+    const now = new Date();
+    const validTo = promotion.valid_to ? new Date(promotion.valid_to) : null;
+    return !promotion.is_active || (validTo && validTo < now);
+  };
+
+  const getRowStyle = (promotion) => {
+    if (isExpired(promotion)) {
+      return { backgroundColor: '#f5f5f5' }; // Grey background for expired
+    } else {
+      return { backgroundColor: '#e8f5e8' }; // Light green background for valid
+    }
+  };
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -90,38 +104,72 @@ const PromotionCodesTab = ({
             <TableRow>
               <TableCell>Code</TableCell>
               <TableCell>Name</TableCell>
+              <TableCell>Rule Description</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Amount</TableCell>
               <TableCell>Valid From</TableCell>
               <TableCell>Valid To</TableCell>
               <TableCell>Active</TableCell>
               <TableCell>Times Used</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={10} align="center">
                   <CircularProgress />
                 </TableCell>
               </TableRow>
             ) : promotions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={10} align="center">
                   No promotions found
                 </TableCell>
               </TableRow>
             ) : (
               promotions.map((promo) => (
-                <TableRow key={promo.id}>
+                <TableRow key={promo.id} style={getRowStyle(promo)}>
                   <TableCell>{promo.code}</TableCell>
                   <TableCell>{promo.name}</TableCell>
+                  <TableCell>
+                    <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {promo.promotion_rule?.rule_description || 'No description'}
+                    </div>
+                  </TableCell>
                   <TableCell>{promo.type}</TableCell>
                   <TableCell>{promo.amount}</TableCell>
                   <TableCell>{promo.valid_from ? new Date(promo.valid_from).toLocaleDateString() : ''}</TableCell>
                   <TableCell>{promo.valid_to ? new Date(promo.valid_to).toLocaleDateString() : ''}</TableCell>
-                  <TableCell>{promo.is_active ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      backgroundColor: promo.is_active ? '#4caf50' : '#f44336'
+                    }}>
+                      {promo.is_active ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                  </TableCell>
                   <TableCell>{promo.times_used}</TableCell>
+                  <TableCell>
+                    {!isExpired(promo) && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => onExpirePromotion(promo.code)}
+                        style={{ marginRight: 8 }}
+                      >
+                        Expire
+                      </Button>
+                    )}
+                    {isExpired(promo) && (
+                      <span style={{ color: '#666', fontSize: '12px' }}>Expired</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}

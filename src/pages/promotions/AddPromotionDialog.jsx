@@ -50,7 +50,7 @@ const AddPromotionDialog = ({
             >
               {promotionRules.map((rule) => (
                 <MenuItem key={rule.id} value={rule.id}>
-                  {formatLabel(rule.promotion_rule_action?.name)} on {formatLabel(rule.promotion_rule_event?.name)} (Max: {rule.max_usage}, Beneficiary: {getBeneficiaryLabel(rule.beneficiary)})
+                  {rule.rule_description || 'No description'} - {formatLabel(rule.promotion_rule_action?.name)} on {formatLabel(rule.promotion_rule_event?.name)} (Max: {rule.max_usage}, Beneficiary: {getBeneficiaryLabel(rule.beneficiary)})
                 </MenuItem>
               ))}
             </Select>

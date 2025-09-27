@@ -78,6 +78,15 @@ const AddEditRuleDialog = ({
               <MenuItem value={2}>BOTH</MenuItem>
             </Select>
           </FormControl>
+          <TextField
+            fullWidth
+            label="Rule Description"
+            value={formData.rule_description || ''}
+            onChange={(e) => setFormData({ ...formData, rule_description: e.target.value })}
+            multiline
+            rows={3}
+            placeholder="Enter a description for this rule (optional)"
+          />
         </div>
       </DialogContent>
       <DialogActions>

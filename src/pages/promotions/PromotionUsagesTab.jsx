@@ -45,7 +45,16 @@ const PromotionUsagesTab = ({
               value={filters.promotion_code || ''}
               onChange={(e) => setFilters({ ...filters, promotion_code: e.target.value })}
               size="medium"
-              placeholder="Search by code"
+              placeholder="Search by promotion code"
+              InputProps={{ startAdornment: <span style={{ marginRight: 8 }}>🔍</span> }}
+              style={{ minWidth: 180, height: 48 }}
+            />
+            <TextField
+              label="Referral Code"
+              value={filters.referral_code || ''}
+              onChange={(e) => setFilters({ ...filters, referral_code: e.target.value })}
+              size="medium"
+              placeholder="Search by referral code"
               InputProps={{ startAdornment: <span style={{ marginRight: 8 }}>🔍</span> }}
               style={{ minWidth: 180, height: 48 }}
             />
@@ -60,7 +69,7 @@ const PromotionUsagesTab = ({
               >
                 <MenuItem value="">All</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="success">Success</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
                 <MenuItem value="failed">Failed</MenuItem>
               </Select>
             </div>
@@ -82,7 +91,9 @@ const PromotionUsagesTab = ({
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>User Email</TableCell>
               <TableCell>Promotion Code</TableCell>
+              <TableCell>Referral Code</TableCell>
               <TableCell>Bundle</TableCell>
               <TableCell>Amount</TableCell>
               <TableCell>Status</TableCell>
@@ -92,23 +103,50 @@ const PromotionUsagesTab = ({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={7} align="center">
                   <CircularProgress />
                 </TableCell>
               </TableRow>
             ) : usages.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={7} align="center">
                   No usages found
                 </TableCell>
               </TableRow>
             ) : (
               usages.map((usage) => (
                 <TableRow key={usage.id}>
-                  <TableCell>{usage.promotion_code}</TableCell>
-                  <TableCell>{usage.bundle?.name || ''}</TableCell>
-                  <TableCell>{usage.amount}</TableCell>
-                  <TableCell>{usage.status}</TableCell>
+                  <TableCell>{usage.user?.email || 'N/A'}</TableCell>
+                  <TableCell>{usage.promotion_code || 'N/A'}</TableCell>
+                  <TableCell>{usage.referral_code || 'N/A'}</TableCell>
+                  <TableCell>
+                    {usage.bundle_id ? (
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>
+                          {usage.bundle?.bundle_name || 'Unknown Bundle'}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                          {usage.bundle_id}
+                        </div>
+                      </div>
+                    ) : 'N/A'}
+                  </TableCell>
+                  <TableCell>{usage.amount || 0}</TableCell>
+                  <TableCell>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      color: 'white',
+                      backgroundColor: 
+                        usage.status === 'completed' ? '#4caf50' :
+                        usage.status === 'pending' ? '#ff9800' :
+                        usage.status === 'failed' ? '#f44336' : '#9e9e9e'
+                    }}>
+                      {usage.status?.toUpperCase() || 'UNKNOWN'}
+                    </span>
+                  </TableCell>
                   <TableCell>{new Date(usage.created_at).toLocaleString()}</TableCell>
                 </TableRow>
               ))

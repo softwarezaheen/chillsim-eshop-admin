@@ -50,6 +50,7 @@ const PromotionRulesTab = ({
               <TableCell>Event</TableCell>
               <TableCell>Max Usage</TableCell>
               <TableCell>Beneficiary</TableCell>
+              <TableCell>Description</TableCell>
               <TableCell>Created At</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -57,13 +58,13 @@ const PromotionRulesTab = ({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   <CircularProgress />
                 </TableCell>
               </TableRow>
             ) : rules.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   No promotion rules found
                 </TableCell>
               </TableRow>
@@ -74,6 +75,11 @@ const PromotionRulesTab = ({
                   <TableCell>{formatLabel(rule.promotion_rule_event?.name)}</TableCell>
                   <TableCell>{rule.max_usage}</TableCell>
                   <TableCell>{getBeneficiaryLabel(rule.beneficiary)}</TableCell>
+                  <TableCell>
+                    <div style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {rule.rule_description || 'No description'}
+                    </div>
+                  </TableCell>
                   <TableCell>{new Date(rule.created_at).toLocaleString()}</TableCell>
                   <TableCell>
                     <Button onClick={() => onEditRule(rule)}>Edit</Button>
