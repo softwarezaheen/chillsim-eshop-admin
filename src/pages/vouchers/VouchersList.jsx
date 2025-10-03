@@ -106,13 +106,42 @@ export default function VouchersList() {
       setSelected([]);
     } else if (action === "export") {
       setExportLoading(true);
+      
+      // Fetch all selected vouchers from database (not just current page)
+      const { data: selectedVouchers, error } = await supabase
+        .from("voucher")
+        .select("*, partners(name)")
+        .in("id", selected);
+      
+      if (error) {
+        console.error("Error fetching selected vouchers for export:", error);
+        setExportLoading(false);
+        return;
+      }
+
+      // Merge user emails for selected vouchers
+      let vouchersForExport = selectedVouchers || [];
+      if (vouchersForExport.length > 0) {
+        const usedByIds = [...new Set(vouchersForExport.map(v => v.used_by).filter(Boolean))];
+        if (usedByIds.length > 0) {
+          const { data: usersData, error: usersError } = await supabase
+            .from("users_copy")
+            .select("id, email")
+            .in("id", usedByIds);
+          if (!usersError && usersData) {
+            const userMap = Object.fromEntries(usersData.map(u => [u.id, u.email]));
+            vouchersForExport = vouchersForExport.map(v => ({ ...v, user_email: userMap[v.used_by] || null }));
+          }
+        }
+      }
+
       // Prepare CSV data
       const now = new Date().toLocaleString();
       function formatCode(code) {
         if (!code) return "";
         return code.match(/.{1,4}/g)?.join("-") || code;
       }
-      const exportData = vouchers.filter(v => selected.includes(v.id)).map(v => {
+      const exportData = vouchersForExport.map(v => {
         // Build row without id, used_by, partner_id
         const {
           id,
