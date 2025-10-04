@@ -13,6 +13,13 @@ import VouchersList from "../../pages/vouchers/VouchersList";
 import Partners from "../../pages/partners/Partners";
 import PromotionsPage from "../../pages/promotions/PromotionsPage";
 
+// App Content Pages
+import FAQPage from "../../pages/app-content/FAQPage";
+import TermsAndConditionsPage from "../../pages/app-content/TermsAndConditionsPage";
+import PrivacyPolicyPage from "../../pages/app-content/PrivacyPolicyPage";
+import AboutUsPage from "../../pages/app-content/AboutUsPage";
+import CookiePolicyPage from "../../pages/app-content/CookiePolicyPage";
+
 export const privateRoutes = [
   {
     path: "/",
@@ -97,6 +104,49 @@ export const privateRoutes = [
         key: "/promotions",
         name: "Promotions",
         regex: "^/promotions/?$",
+      },
+      // App Content Routes
+      {
+        path: "/app-content",
+        element: <FAQPage />,
+        key: "/app-content",
+        name: "App Content",
+        regex: "^/app-content/?$",
+      },
+      {
+        path: "/app-content/faq",
+        element: <FAQPage />,
+        key: "/app-content/faq",
+        name: "FAQ",
+        regex: "^/app-content/faq/?$",
+      },
+      {
+        path: "/app-content/terms-and-conditions",
+        element: <TermsAndConditionsPage />,
+        key: "/app-content/terms-and-conditions",
+        name: "Terms and Conditions",
+        regex: "^/app-content/terms-and-conditions/?$",
+      },
+      {
+        path: "/app-content/privacy-policy",
+        element: <PrivacyPolicyPage />,
+        key: "/app-content/privacy-policy",
+        name: "Privacy Policy",
+        regex: "^/app-content/privacy-policy/?$",
+      },
+      {
+        path: "/app-content/about-us",
+        element: <AboutUsPage />,
+        key: "/app-content/about-us",
+        name: "About Us",
+        regex: "^/app-content/about-us/?$",
+      },
+      {
+        path: "/app-content/cookie-policy",
+        element: <CookiePolicyPage />,
+        key: "/app-content/cookie-policy",
+        name: "Cookie Policy",
+        regex: "^/app-content/cookie-policy/?$",
       },
       {
         path: "*",

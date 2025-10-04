@@ -9,11 +9,11 @@ import {
   List,
   useMediaQuery
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { MenuRoutes } from "../../../core/routes/RouteVariables";
 import IconImage from "../../shared/icon-image/IconImage";
-import { closedMixin, openedMixin } from "./MenuFunctions";
+import { closedMixin, openedMixin, buildMenuHierarchy } from "./MenuFunctions";
 import MenuItems from "./MenuItems";
 import MuiDrawerHeader from "./MuiDrawerHeader";
 import ToolTipMenu from "./ToolTipMenu";
@@ -26,6 +26,9 @@ const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
     const savedMenus = localStorage.getItem("openMenus");
     return savedMenus ? JSON.parse(savedMenus) : {};
   });
+
+  // Build hierarchical menu structure from flat MenuRoutes
+  const hierarchicalMenus = useMemo(() => buildMenuHierarchy(MenuRoutes), []);
 
   const toggleMenu = useCallback((guid) => {
     setOpenMenus((prev) => {
@@ -125,7 +128,7 @@ const MuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
         )}{" "}
       </MuiDrawerHeader>{" "}
       <Box sx={{ flexGrow: 1, overflow: "auto" }}>
-        {MenuRoutes.length > 0 && <List>{renderMenu(MenuRoutes)}</List>}{" "}
+        {hierarchicalMenus.length > 0 && <List>{renderMenu(hierarchicalMenus)}</List>}{" "}
       </Box>{" "}
     </Drawer>
   );
