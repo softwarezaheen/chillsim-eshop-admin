@@ -20,6 +20,9 @@ import PrivacyPolicyPage from "../../pages/app-content/PrivacyPolicyPage";
 import AboutUsPage from "../../pages/app-content/AboutUsPage";
 import CookiePolicyPage from "../../pages/app-content/CookiePolicyPage";
 
+// Financial Pages
+import FinancialPage from "../../pages/financial/FinancialPage";
+
 export const privateRoutes = [
   {
     path: "/",
@@ -55,6 +58,13 @@ export const privateRoutes = [
         key: "/orders",
         name: "Orders",
         regex: "^/orders/?$",
+      },
+      {
+        path: "/financial",
+        element: <FinancialPage />,
+        key: "/financial",
+        name: "Financial",
+        regex: "^/financial/?$",
       },
       {
         path: "/users/:id",

@@ -69,6 +69,23 @@ export const MenuRoutes = [
     parentName: null,
     parentGuid: null,
     displayOrder: 3,
+    uri: "financial",
+    iconUri: "fa-coins",
+    recordGuid: "10",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Financial",
+        description: "Financial Documents",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 4,
     uri: "contact-us",
     iconUri: "fa-phone",
     recordGuid: "4",
@@ -85,7 +102,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 3,
+    displayOrder: 5,
     uri: "bundles",
     iconUri: "fa-sim-card",
     recordGuid: "5",
@@ -102,7 +119,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 4,
+    displayOrder: 6,
     uri: "partners",
     iconUri: "fa-users",
     recordGuid: "6",
@@ -119,7 +136,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 5,
+    displayOrder: 7,
     uri: "vouchers",
     iconUri: "fa-ticket",
     recordGuid: "7",
@@ -136,7 +153,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 6,
+    displayOrder: 8,
     uri: "promotions",
     iconUri: "fa-gift",
     recordGuid: "8",
@@ -153,7 +170,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 7,
+    displayOrder: 9,
     uri: "app-content",
     iconUri: "fa-file-text",
     recordGuid: "9",
