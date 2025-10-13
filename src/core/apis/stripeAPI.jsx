@@ -33,6 +33,7 @@ export const createRefund = async ({ paymentIntentId, amount = null, reason = 'r
       }
     );
 
+    // Successful response (HTTP 200)
     return {
       success: true,
       data: response.data,
@@ -40,11 +41,30 @@ export const createRefund = async ({ paymentIntentId, amount = null, reason = 'r
     };
   } catch (error) {
     console.error('Stripe refund error:', error);
-    const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to create refund';
+    
+    // Handle error response from backend (HTTP 4xx, 5xx)
+    if (error.response?.data) {
+      const errorData = error.response.data;
+      return {
+        success: false,
+        data: null,
+        error: {
+          code: errorData.code || error.response.status,
+          name: errorData.name || 'Refund Error',
+          details: errorData.details || errorData.message || 'Failed to create refund',
+        },
+      };
+    }
+    
+    // Network or other errors
     return {
       success: false,
       data: null,
-      error: errorMessage,
+      error: {
+        code: 500,
+        name: 'Network Error',
+        details: error.message || 'Failed to create refund',
+      },
     };
   }
 };

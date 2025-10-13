@@ -7,7 +7,7 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
   const to = from + pageSize - 1;
 
   try {
-    // Step 1: Fetch orders with filters
+    // Step 1: Fetch orders with filters (except email - that's applied later)
     const orderRes = await api(() => {
       let query = supabase
         .from("user_order")
@@ -26,7 +26,11 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
         query = query.ilike("payment_type", paymentType);
       }
 
-      query = query.range(from, to);
+      // Note: Email filter cannot be applied here as emails are in auth.users
+      // We'll need to fetch more data if email filter is active
+      if (!userEmail) {
+        query = query.range(from, to);
+      }
 
       return query;
     });
@@ -35,25 +39,20 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
       return {
         ...orderRes,
         data: [],
+        count: 0,
       };
     }
 
     const userIds = [...new Set(orderRes.data.map((order) => order.user_id))];
 
-    // Step 2: Fetch user emails from auth.users table
-    const { data: authUsers, error: authError } = await supabase
-      .from("users")
-      .select("id, email")
-      .in("id", userIds);
-    
-    if (authError) {
-      console.error("Failed to fetch auth users:", authError);
-    }
+    // Step 2: Fetch user emails from auth.users using admin API
+    const { data: allAuthUsersResponse } = await supabase.auth.admin.listUsers();
+    const relevantAuthUsers = allAuthUsersResponse?.users?.filter(u => userIds.includes(u.id)) || [];
 
     // Create a map of user_id to email
-    const userEmailMap = authUsers 
-      ? Object.fromEntries(authUsers.map((u) => [u.id, u.email]))
-      : {};
+    const userEmailMap = Object.fromEntries(
+      relevantAuthUsers.map((u) => [u.id, u.email])
+    );
 
     // Step 3: Fetch user_copy info for additional metadata (phone, etc.)
     const { data: users, error } = await supabase
@@ -74,17 +73,25 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
       user_email: userEmailMap[order.user_id] || userMap[order.user_id]?.metadata?.email || null,
     }));
 
-    // Step 5: Filter by email if provided
+    // Step 5: Filter by email if provided (client-side)
     if (userEmail) {
       enrichedOrders = enrichedOrders.filter(order => 
         order.user_email?.toLowerCase().includes(userEmail.toLowerCase())
       );
+      
+      // Apply pagination manually after filtering
+      const paginatedOrders = enrichedOrders.slice(from, to + 1);
+      
+      return {
+        data: paginatedOrders,
+        count: enrichedOrders.length,
+        error: null,
+      };
     }
 
     return {
       ...orderRes,
       data: enrichedOrders,
-      count: userEmail ? enrichedOrders.length : orderRes.count,
     };
   } catch (error) {
     console.error("Merge user info into orders failed:", error);

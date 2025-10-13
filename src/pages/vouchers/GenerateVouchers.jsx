@@ -15,11 +15,22 @@ function randomCode(prefix = "", len = 12) {
 
 export default function GenerateVouchers({ open, onClose, onGenerated }) {
   const [partners, setPartners] = useState([]);
+  
+  // Calculate default expiration: 1 year from today + 1 day at 00:00:00
+  const getDefaultExpiration = () => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 1); // Add 1 year
+    date.setDate(date.getDate() + 1); // Add 1 day
+    date.setHours(0, 0, 0, 0); // Set to 00:00:00
+    // Format for datetime-local input: YYYY-MM-DDTHH:MM
+    return date.toISOString().slice(0, 16);
+  };
+  
   const [form, setForm] = useState({
     partner_id: "",
     amount: "",
     howMany: 1,
-    expired_at: "",
+    expired_at: getDefaultExpiration(),
   });
   const [saving, setSaving] = useState(false);
 

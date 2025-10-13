@@ -29,7 +29,9 @@ import {
 import Grid from "@mui/material/Grid2";
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import RefundIcon from '@mui/icons-material/AccountBalanceWallet';
+import RestoreIcon from '@mui/icons-material/Restore';
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
 import Filters from "../../Components/Filters/Filters";
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
@@ -43,6 +45,11 @@ function OrdersPage() {
   const [expandedRow, setExpandedRow] = useState(null);
   const [refundDialog, setRefundDialog] = useState({ open: false, order: null });
   const [refundLoading, setRefundLoading] = useState(false);
+  const [refundResultDialog, setRefundResultDialog] = useState({ 
+    open: false, 
+    success: false, 
+    data: null 
+  });
   
   // Filter states
   const [inputFilters, setInputFilters] = useState({
@@ -146,17 +153,47 @@ function OrdersPage() {
         amount: null, // Full refund
       });
 
+      setRefundDialog({ open: false, order: null });
+
       if (result.success) {
-        toast.success('Order refunded successfully!');
-        setRefundDialog({ open: false, order: null });
+        // Show success modal with refund details
+        // result.refundData contains the Stripe refund response
+        // result.refundData.data contains the actual refund details
+        const refundData = result.refundData?.data || result.refundData;
+        console.log('Refund result.refundData:', result.refundData);
+        console.log('Extracted refundData:', refundData);
+        
+        setRefundResultDialog({
+          open: true,
+          success: true,
+          data: refundData,
+        });
         // Refresh the orders list
         getOrders();
       } else {
-        toast.error(result.error || 'Failed to refund order');
+        // Show error modal
+        setRefundResultDialog({
+          open: true,
+          success: false,
+          data: {
+            code: result.error?.code || 400,
+            name: result.error?.name || 'Refund Failed',
+            details: result.error?.details || result.error || 'Failed to process refund',
+          },
+        });
       }
     } catch (error) {
       console.error('Refund error:', error);
-      toast.error('Failed to refund order');
+      setRefundDialog({ open: false, order: null });
+      setRefundResultDialog({
+        open: true,
+        success: false,
+        data: {
+          code: 500,
+          name: 'Server Error',
+          details: error.message || 'An unexpected error occurred',
+        },
+      });
     } finally {
       setRefundLoading(false);
     }
@@ -321,27 +358,34 @@ function OrdersPage() {
                 </TableCell>
 
                 <TableCell sx={{ minWidth: "150px" }}>
-                  <div className="font-semibold">
-                    {order.currency}{" "}
-                    <CountUp
-                      start={0}
-                      end={calculateTotalAmount(order)}
-                      duration={1.5}
-                      separator=","
-                      decimals={2}
-                    />
+                  <div className="font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>
+                      {order.currency}{" "}
+                      <CountUp
+                        start={0}
+                        end={calculateTotalAmount(order)}
+                        duration={1.5}
+                        separator=","
+                        decimals={2}
+                      />
+                    </span>
+                    {order.payment_type === 'Wallet' ? (
+                      <WalletIcon sx={{ fontSize: 20, color: '#9c27b0' }} />
+                    ) : order.payment_type === 'Card' ? (
+                      <CreditCardIcon sx={{ fontSize: 20, color: '#1976d2' }} />
+                    ) : null}
                   </div>
                 </TableCell>
 
                 <TableCell sx={{ minWidth: "100px" }}>
-                  {order.payment_status === 'success' && (
+                  {order.payment_status === 'success' && order.payment_type !== 'Wallet' && (
                     <IconButton
                       size="small"
                       color="warning"
                       onClick={() => handleRefund(order)}
                       title="Refund Order"
                     >
-                      <RefundIcon />
+                      <RestoreIcon />
                     </IconButton>
                   )}
                 </TableCell>
@@ -539,9 +583,150 @@ function OrdersPage() {
             variant="contained"
             color="warning"
             disabled={refundLoading}
-            startIcon={refundLoading ? <CircularProgress size={20} /> : <RefundIcon />}
+            startIcon={refundLoading ? <CircularProgress size={20} /> : <RestoreIcon />}
           >
             {refundLoading ? 'Processing...' : 'Confirm Refund'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Refund Result Dialog */}
+      <Dialog
+        open={refundResultDialog.open}
+        onClose={() => setRefundResultDialog({ open: false, success: false, data: null })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle 
+          sx={{ 
+            bgcolor: refundResultDialog.success ? 'success.light' : 'error.light',
+            color: refundResultDialog.success ? 'success.contrastText' : 'error.contrastText',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          {refundResultDialog.success ? (
+            <>
+              ✓ Refund Successful
+            </>
+          ) : (
+            <>
+              ✕ Refund Failed
+            </>
+          )}
+        </DialogTitle>
+        <DialogContent sx={{ mt: 3 }}>
+          {refundResultDialog.success ? (
+            // Success Content
+            <Box>
+              <Typography variant="body1" gutterBottom sx={{ mb: 3, color: 'success.dark', fontWeight: 'medium' }}>
+                {refundResultDialog.data?.message || 'Refund initiated successfully. Credit note will be generated automatically.'}
+              </Typography>
+              
+              <Box sx={{ bgcolor: 'grey.50', p: 2.5, borderRadius: 2, border: '1px solid', borderColor: 'grey.200' }}>
+                <Grid container spacing={2}>
+                  <Grid size={6}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Refund ID
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium" sx={{ wordBreak: 'break-all' }}>
+                      {refundResultDialog.data?.refund_id || 'N/A'}
+                    </Typography>
+                  </Grid>
+                  
+                  <Grid size={6}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Status
+                    </Typography>
+                    <Chip 
+                      label={refundResultDialog.data?.status || 'Succeeded'} 
+                      color="success" 
+                      size="small" 
+                      sx={{ mt: 0.5, textTransform: 'capitalize' }}
+                    />
+                  </Grid>
+
+                  <Grid size={6}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Amount
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium">
+                      {refundResultDialog.data?.currency?.toUpperCase() || 'EUR'} {(refundResultDialog.data?.amount || 0).toFixed(2)}
+                    </Typography>
+                  </Grid>
+
+                  <Grid size={6}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Payment Intent
+                    </Typography>
+                    <Typography variant="body2" fontWeight="medium" sx={{ wordBreak: 'break-all', fontSize: '0.75rem' }}>
+                      {refundResultDialog.data?.payment_intent_id || 'N/A'}
+                    </Typography>
+                  </Grid>
+
+                  {refundResultDialog.data?.reason && (
+                    <Grid size={12}>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Reason
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium">
+                        {refundResultDialog.data.reason}
+                      </Typography>
+                    </Grid>
+                  )}
+
+                  {refundResultDialog.data?.created_at && (
+                    <Grid size={12}>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Processed At
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium">
+                        {dayjs(refundResultDialog.data.created_at).format('DD-MM-YYYY HH:mm:ss')}
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </Box>
+            </Box>
+          ) : (
+            // Error Content
+            <Box>
+              <Box sx={{ 
+                bgcolor: 'error.lighter', 
+                p: 2.5, 
+                borderRadius: 2, 
+                border: '1px solid', 
+                borderColor: 'error.light',
+                mb: 2,
+              }}>
+                <Typography variant="h6" color="error.dark" gutterBottom>
+                  {refundResultDialog.data?.name || 'Error'}
+                </Typography>
+                <Typography variant="body2" color="error.dark">
+                  {refundResultDialog.data?.details || 'An error occurred while processing the refund.'}
+                </Typography>
+                {refundResultDialog.data?.code && (
+                  <Typography variant="caption" color="error.main" display="block" sx={{ mt: 1 }}>
+                    Error Code: {refundResultDialog.data.code}
+                  </Typography>
+                )}
+              </Box>
+
+              <Typography variant="body2" color="text.secondary">
+                Please check the payment status and try again. If the problem persists, contact support.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, pt: 1 }}>
+          <Button 
+            onClick={() => setRefundResultDialog({ open: false, success: false, data: null })}
+            variant="contained"
+            color={refundResultDialog.success ? 'success' : 'primary'}
+            fullWidth
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>
