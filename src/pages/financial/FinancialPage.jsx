@@ -416,6 +416,7 @@ const FinancialPage = () => {
       // Accounting ID: Use beneficiary VAT number if exists, otherwise use email
       get(data, 'beneficiary.vat_number') || get(data, 'beneficiary.email'),
       doc.payment_intent_id || '',
+      doc.order_id || '',  // NEW: Order ID from user_orders table
       new Date(doc.created_at).toISOString(),
       
       // Invoice/Credit Note specific
@@ -524,6 +525,7 @@ const FinancialPage = () => {
         'Document Type',
         'Accounting ID',
         'Payment Intent ID',
+        'Order ID',
         'Created At',
         
         // Invoice/Credit Note specific
