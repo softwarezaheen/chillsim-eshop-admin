@@ -457,7 +457,7 @@ function OrdersPage() {
                             👤 User Information
                           </Typography>
                           <Box sx={{ pl: 2 }}>
-                            <DetailRow label="User ID" value={order.user_id} />
+                            <DetailRow label="User ID" value={order.user_id || "Deleted User"} />
                             <DetailRow label="Email" value={order.user_email || "N/A"} />
                             <DetailRow label="Phone" value={order.user?.metadata?.msisdn || "N/A"} />
                             {order.anonymous_user_id && order.anonymous_user_id !== order.user_id && (

@@ -43,11 +43,15 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
       };
     }
 
-    const userIds = [...new Set(orderRes.data.map((order) => order.user_id))];
+    // Filter out NULL user_ids before fetching user data
+    const userIds = [...new Set(orderRes.data.map((order) => order.user_id).filter(id => id !== null))];
 
-    // Step 2: Fetch user emails from auth.users using admin API
-    const { data: allAuthUsersResponse } = await supabase.auth.admin.listUsers();
-    const relevantAuthUsers = allAuthUsersResponse?.users?.filter(u => userIds.includes(u.id)) || [];
+    // Step 2: Fetch user emails from auth.users using admin API (only if we have valid user IDs)
+    let relevantAuthUsers = [];
+    if (userIds.length > 0) {
+      const { data: allAuthUsersResponse } = await supabase.auth.admin.listUsers();
+      relevantAuthUsers = allAuthUsersResponse?.users?.filter(u => userIds.includes(u.id)) || [];
+    }
 
     // Create a map of user_id to email
     const userEmailMap = Object.fromEntries(
@@ -55,13 +59,18 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
     );
 
     // Step 3: Fetch user_copy info for additional metadata (phone, etc.)
-    const { data: users, error } = await supabase
-      .from("users_copy")
-      .select("id,metadata")
-      .in("id", userIds);
+    let users = [];
+    if (userIds.length > 0) {
+      const { data: usersData, error } = await supabase
+        .from("users_copy")
+        .select("id,metadata")
+        .in("id", userIds);
 
-    if (error) {
-      console.error("Failed to fetch users_copy:", error);
+      if (error) {
+        console.error("Failed to fetch users_copy:", error);
+      } else {
+        users = usersData || [];
+      }
     }
 
     // Step 4: Merge user info into orders
