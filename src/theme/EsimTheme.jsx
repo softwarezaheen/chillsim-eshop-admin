@@ -87,7 +87,7 @@ const inputGlobalStyles = (theme) => (
   />
 );
 
-function MontyTheme({ direction = "ltr", theme, children }) {
+function EsimTheme({ direction = "ltr", theme, children }) {
   const muiTheme = createTheme({
     ...theme,
     typography: {
@@ -179,10 +179,10 @@ function MontyTheme({ direction = "ltr", theme, children }) {
 }
 
 // Add PropTypes validation
-MontyTheme.propTypes = {
+EsimTheme.propTypes = {
   direction: PropTypes.oneOf(["ltr", "rtl"]).isRequired,
   theme: PropTypes.object.isRequired,
   children: PropTypes.node,
 };
 
-export default memo(MontyTheme);
+export default memo(EsimTheme);

@@ -1,4 +1,4 @@
-# Monty eSim EShop Admin
+# ChillSIM EShop Admin
 
 ## **Introduction**
 

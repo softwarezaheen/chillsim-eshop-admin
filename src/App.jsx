@@ -9,7 +9,7 @@ import persistStore from "redux-persist/es/persistStore";
 import { ToastContainer } from "react-toastify";
 import AppRouter from "./core/routes/AppRouter";
 import { store } from "./Redux/store";
-import MontyTheme from "./theme/MontyTheme";
+import EsimTheme from "./theme/EsimTheme";
 import themesConfig from "./theme/themesConfig";
 
 async function deleteDatabase(name) {
@@ -81,7 +81,7 @@ function App() {
   }, [localStorage.getItem("PACKAGE_VERSION")]);
 
   return (
-    <MontyTheme theme={theme} direction="ltr">
+    <EsimTheme theme={theme} direction="ltr">
       <CssBaseline />
 
       <BrowserRouter>
@@ -103,7 +103,7 @@ function App() {
           closeButton={false}
         />
       </BrowserRouter>
-    </MontyTheme>
+    </EsimTheme>
   );
 }
 

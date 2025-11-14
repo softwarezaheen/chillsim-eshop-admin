@@ -17,8 +17,8 @@ import {
 import { styled } from "@mui/material/styles";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import montymobileimage from "../../../../assets/monty-mobile-icon.svg";
-// import montymobileimage from "../../../Assets/Images/monty-mobile-icon.svg";
+import chillsimimage from "../../../../assets/monty-mobile-icon.svg";
+// import chillsimimage from "../../../Assets/Images/monty-mobile-icon.svg";
 
 import { Link } from "react-router-dom";
 // import Footer from "./Footer";
@@ -582,7 +582,7 @@ const MobileMuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
                 }}
               >
                 <a href={INDEX_ROUTE}>
-                  <img alt="Monty Mobile" src={montymobileimage} width={85} />
+                  <img alt="ChillSIM" src={chillsimimage} width={85} />
                 </a>
                 <Box
                   onClick={() => {
@@ -660,7 +660,7 @@ const MobileMuiSideNavigation = ({ open, drawerWidth, setOpen }) => {
                 }}
               >
                 <a href={INDEX_ROUTE}>
-                  <img alt="Monty Mobile" src={montymobileimage} width={85} />
+                  <img alt="ChillSIM" src={chillsimimage} width={85} />
                 </a>
                 <Box
                   onClick={() => {
