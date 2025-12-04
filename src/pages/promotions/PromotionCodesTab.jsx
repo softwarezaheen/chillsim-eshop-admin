@@ -8,10 +8,11 @@ import {
   TableRow,
   CircularProgress,
   TablePagination,
+  Typography,
 } from '@mui/material';
 import Filters from '../../Components/Filters/Filters';
 import CustomDatePicker from '../../Components/CustomDatePicker';
-import { TextField, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Button, Box } from '@mui/material';
 
 const PromotionCodesTab = ({
   promotions,
@@ -27,6 +28,8 @@ const PromotionCodesTab = ({
   handlePageSizeChange,
   onAddPromotion,
   onExpirePromotion,
+  onBulkGenerate,
+  onExportCsv,
 }) => {
   const isExpired = (promotion) => {
     const now = new Date();
@@ -43,12 +46,34 @@ const PromotionCodesTab = ({
   };
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div />
-        <Button variant="contained" color="primary" onClick={onAddPromotion}>
-          Add Promotion
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2, gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={onBulkGenerate}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            🎟️ Bulk Generate
+          </Button>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={onAddPromotion}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            Add Single Code
+          </Button>
+        </Box>
+        <Button 
+          variant="outlined" 
+          color="success" 
+          onClick={onExportCsv}
+          sx={{ whiteSpace: 'nowrap' }}
+        >
+          📥 Export CSV
         </Button>
-      </div>
+      </Box>
       <Filters
         onReset={() => {
           setFilters({});
@@ -58,44 +83,87 @@ const PromotionCodesTab = ({
           setPage(0);
         }}
         applyDisable={false}
+        filterStyles={{
+          borderRadius: "16px",
+          paddingBottom: 2,
+        }}
       >
-        <div style={{ width: '100%' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, width: '100%', alignItems: 'flex-end', marginBottom: 12 }}>
+        <Box sx={{ width: '100%' }}>
+          {/* First Row: Search and Dropdowns */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 2 }}>
             <TextField
               label="Code"
               value={filters.code || ''}
               onChange={(e) => setFilters({ ...filters, code: e.target.value })}
-              size="medium"
+              size="small"
               placeholder="Search by code"
               InputProps={{ startAdornment: <span style={{ marginRight: 8 }}>🔍</span> }}
-              style={{ minWidth: 180, height: 48 }}
+              fullWidth
             />
-            <div style={{ display: 'flex', flexDirection: 'column', minWidth: 140 }}>
-              <InputLabel>Active</InputLabel>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Active Status</InputLabel>
               <Select
                 value={filters.is_active || ''}
                 onChange={(e) => setFilters({ ...filters, is_active: e.target.value })}
-                displayEmpty
-                size="medium"
-                style={{ height: 48 }}
+                label="Active Status"
               >
                 <MenuItem value="">All</MenuItem>
-                <MenuItem value={true}>Active</MenuItem>
-                <MenuItem value={false}>Inactive</MenuItem>
+                <MenuItem value={true}>✅ Active</MenuItem>
+                <MenuItem value={false}>❌ Inactive</MenuItem>
               </Select>
-            </div>
-            <CustomDatePicker
-              label="Valid From"
-              value={filters.valid_from || null}
-              onChange={(date) => setFilters({ ...filters, valid_from: date })}
-            />
-            <CustomDatePicker
-              label="Valid To"
-              value={filters.valid_to || null}
-              onChange={(date) => setFilters({ ...filters, valid_to: date })}
-            />
-          </div>
-        </div>
+            </FormControl>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Promotion Type</InputLabel>
+              <Select
+                value={filters.promo_type || ''}
+                onChange={(e) => setFilters({ ...filters, promo_type: e.target.value })}
+                label="Promotion Type"
+              >
+                <MenuItem value="">All Types</MenuItem>
+                <MenuItem value="PROMOTION">🎫 Manual</MenuItem>
+                <MenuItem value="BULK">🎟️ Bulk Generated</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Second Row: Valid Date Range */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', fontWeight: 500 }}>
+              Valid Date Range
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+              <CustomDatePicker
+                label="Valid From"
+                value={filters.valid_from || null}
+                onChange={(date) => setFilters({ ...filters, valid_from: date })}
+              />
+              <CustomDatePicker
+                label="Valid To"
+                value={filters.valid_to || null}
+                onChange={(date) => setFilters({ ...filters, valid_to: date })}
+              />
+            </Box>
+          </Box>
+
+          {/* Third Row: Created Date Range */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', fontWeight: 500 }}>
+              Created Date Range
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+              <CustomDatePicker
+                label="Created From"
+                value={filters.created_from || null}
+                onChange={(date) => setFilters({ ...filters, created_from: date })}
+              />
+              <CustomDatePicker
+                label="Created To"
+                value={filters.created_to || null}
+                onChange={(date) => setFilters({ ...filters, created_to: date })}
+              />
+            </Box>
+          </Box>
+        </Box>
       </Filters>
 
       <TableContainer>

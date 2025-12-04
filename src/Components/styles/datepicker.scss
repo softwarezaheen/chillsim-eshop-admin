@@ -10,16 +10,18 @@ $date-picker-light-border: var(--mui-palette-primary-main); // Assuming you have
 .date-picker-dark {
     .react-datepicker-wrapper {
         width: 100% !important;
-        height: 100% !important;
+        height: auto !important;
         background-color: #171e2e !important;
         border-radius: 18px !important;
     }
 
     .react-datepicker__input-container {
         width: 100%;
+        height: 100%;
 
         input {
             width: 100%;
+            height: 100%;
             padding: 15px 14px;
             border: 1px solid #64748b;
             border-radius: 18px;
@@ -42,16 +44,18 @@ $date-picker-light-border: var(--mui-palette-primary-main); // Assuming you have
 .date-picker-light {
     .react-datepicker-wrapper {
         width: 100% !important;
-        height: 100% !important;
+        height: auto !important;
         background-color: $background-paper !important;
         border-radius: 18px !important;
     }
 
     .react-datepicker__input-container {
         width: 100%;
+        height: 100%;
 
         input {
             width: 100%;
+            height: 100%;
             padding: 15px 14px;
             border: 1px solid #c8c4c4;
             border-radius: 18px;
@@ -74,14 +78,16 @@ $date-picker-light-border: var(--mui-palette-primary-main); // Assuming you have
 .date-picker-error {
     .react-datepicker-wrapper {
         width: 100% !important;
-        height: 100% !important;
+        height: auto !important;
     }
 
     .react-datepicker__input-container {
         width: 100%;
+        height: 100%;
 
         input {
             width: 100%;
+            height: 100%;
             padding: 13px 14px;
             border: 1px solid #f44336 !important;
             border-radius: 8px;

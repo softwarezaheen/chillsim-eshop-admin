@@ -6,6 +6,7 @@ import PromotionUsagesTab from './PromotionUsagesTab';
 import PromotionRulesTab from './PromotionRulesTab';
 import AddPromotionDialog from './AddPromotionDialog';
 import AddEditRuleDialog from './AddEditRuleDialog';
+import BulkGeneratePromoModal from '../../Components/Modals/BulkGeneratePromoModal';
 import {
   getPromotions,
   getPromotionUsages,
@@ -17,6 +18,7 @@ import {
   updatePromotionRule,
   deletePromotionRule,
   expirePromotion,
+  exportPromoCodesCsv,
 } from '../../core/apis/promotionsAPI';
 
 const PromotionsPage = () => {
@@ -28,6 +30,7 @@ const PromotionsPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [bulkGenerateOpen, setBulkGenerateOpen] = useState(false);
   const [formData, setFormData] = useState({
     rule_id: '',
     code: '',
@@ -81,6 +84,12 @@ const PromotionsPage = () => {
     }
     if (processedFilters.valid_to) {
       processedFilters.valid_to = new Date(processedFilters.valid_to).toISOString().split('T')[0];
+    }
+    if (processedFilters.created_from) {
+      processedFilters.created_from = new Date(processedFilters.created_from).toISOString();
+    }
+    if (processedFilters.created_to) {
+      processedFilters.created_to = new Date(processedFilters.created_to).toISOString();
     }
     
     const { data, error, count, adjustedPage } = await getPromotions(processedFilters, page, pageSize);
@@ -300,6 +309,39 @@ const PromotionsPage = () => {
     }
   };
 
+  const handleBulkGenerate = () => {
+    setBulkGenerateOpen(true);
+  };
+
+  const handleBulkGenerateSuccess = () => {
+    toast.success('Promo codes generated successfully!');
+    fetchPromotions();
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      // Process date filters same as fetchPromotions
+      const processedFilters = { ...filters };
+      if (processedFilters.valid_from) {
+        processedFilters.valid_from = new Date(processedFilters.valid_from).toISOString();
+      }
+      if (processedFilters.valid_to) {
+        processedFilters.valid_to = new Date(processedFilters.valid_to).toISOString();
+      }
+      if (processedFilters.created_from) {
+        processedFilters.created_from = new Date(processedFilters.created_from).toISOString();
+      }
+      if (processedFilters.created_to) {
+        processedFilters.created_to = new Date(processedFilters.created_to).toISOString();
+      }
+      
+      await exportPromoCodesCsv(processedFilters);
+      toast.success('CSV exported successfully!');
+    } catch (error) {
+      toast.error(`Failed to export CSV: ${error.message}`);
+    }
+  };
+
   return (
     <Card className="page-card">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -329,6 +371,8 @@ const PromotionsPage = () => {
             handlePageSizeChange={handlePageSizeChange}
             onAddPromotion={() => setAddDialogOpen(true)}
             onExpirePromotion={handleExpirePromotion}
+            onBulkGenerate={handleBulkGenerate}
+            onExportCsv={handleExportCsv}
           />
         )}
 
@@ -377,6 +421,12 @@ const PromotionsPage = () => {
         ruleEvents={ruleEvents}
         editingRule={editingRule}
         onSubmit={editingRule ? handleEditRule : handleAddRule}
+      />
+
+      <BulkGeneratePromoModal
+        open={bulkGenerateOpen}
+        onClose={() => setBulkGenerateOpen(false)}
+        onSuccess={handleBulkGenerateSuccess}
       />
     </Card>
   );
