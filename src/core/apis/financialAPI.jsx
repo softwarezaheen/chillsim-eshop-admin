@@ -47,10 +47,11 @@ export const getAllDocuments = async (params = {}) => {
   try {
     const response = await financialAPI.post('/admin/documents', params);
     // Return in the same format as other APIs: { data, error, count }
+    // Backend returns totalCount (camelCase)
     return { 
       data: response.data.data || response.data.documents || response.data || [], 
       error: null,
-      count: response.data.total || response.data.count || (response.data.data || response.data.documents || response.data || []).length
+      count: response.data.totalCount || response.data.total || response.data.count || (response.data.data || response.data.documents || response.data || []).length
     };
   } catch (error) {
     return { data: [], error: error.message, count: 0 };
@@ -72,10 +73,11 @@ export const getUserDocuments = async (userId, params = {}) => {
   try {
     const response = await financialAPI.get(`/admin/user-documents/${userId}`, { params });
     // Return in the same format as other APIs: { data, error, count }
+    // Backend returns totalCount (camelCase)
     return { 
       data: response.data.data || response.data.documents || response.data || [], 
       error: null,
-      count: response.data.total || response.data.count || (response.data.data || response.data.documents || response.data || []).length
+      count: response.data.totalCount || response.data.total || response.data.count || (response.data.data || response.data.documents || response.data || []).length
     };
   } catch (error) {
     return { data: [], error: error.message, count: 0 };
