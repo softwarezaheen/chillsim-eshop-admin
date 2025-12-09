@@ -2,7 +2,7 @@ import { api } from "./apiInstance";
 import supabase from "./supabase";
 import { createRefund } from "./stripeAPI";
 
-export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, orderType, paymentType }) => {
+export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, orderType, paymentType, fromDate, toDate }) => {
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
@@ -24,6 +24,18 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
 
       if (paymentType) {
         query = query.ilike("payment_type", paymentType);
+      }
+
+      // Date range filters
+      if (fromDate) {
+        query = query.gte("created_at", fromDate);
+      }
+
+      if (toDate) {
+        // Add one day to toDate to include the entire day
+        const nextDay = new Date(toDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        query = query.lt("created_at", nextDay.toISOString());
       }
 
       // Note: Email filter cannot be applied here as emails are in auth.users
@@ -73,16 +85,89 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
       }
     }
 
-    // Step 4: Merge user info into orders
+    // Step 4: Fetch billing information for all user emails
+    // Collect all possible emails from both auth users and users_copy metadata
     const userMap = users ? Object.fromEntries(users.map((u) => [u.id, u])) : {};
+    const allEmails = new Set();
+    
+    relevantAuthUsers.forEach(u => {
+      if (u.email) allEmails.add(u.email.toLowerCase().trim());
+    });
+    
+    users.forEach(u => {
+      const metadataEmail = u.metadata?.email;
+      if (metadataEmail) allEmails.add(metadataEmail.toLowerCase().trim());
+    });
+    
+    let billingInfoMap = {};
+    if (allEmails.size > 0) {
+      const { data: billingData, error: billingError } = await supabase
+        .from("billing_information")
+        .select("email, country");
 
-    let enrichedOrders = orderRes.data.map((order) => ({
-      ...order,
-      user: userMap[order.user_id] || null,
-      user_email: userEmailMap[order.user_id] || userMap[order.user_id]?.metadata?.email || null,
-    }));
+      if (billingError) {
+        console.error("Failed to fetch billing information:", billingError);
+      } else if (billingData) {
+        // Create map with normalized (lowercase) email keys for case-insensitive lookup
+        billingInfoMap = Object.fromEntries(
+          billingData.map(b => [b.email.toLowerCase().trim(), b.country])
+        );
+      }
+    }
 
-    // Step 5: Filter by email if provided (client-side)
+    // Step 5: Fetch currency exchange rates
+    const { data: currencyData, error: currencyError } = await supabase
+      .from("currency")
+      .select("name, rate, default_currency");
+
+    let currencyRates = {};
+    if (currencyError) {
+      console.error("Failed to fetch currency rates:", currencyError);
+    } else if (currencyData) {
+      // Create a map of currency name to rate (rate is relative to default_currency which should be EUR)
+      currencyRates = Object.fromEntries(
+        currencyData.map(c => [c.name, { rate: c.rate, default_currency: c.default_currency }])
+      );
+    }
+
+    // Step 6: Merge user info into orders
+
+    let enrichedOrders = orderRes.data.map((order) => {
+      const userEmail = userEmailMap[order.user_id] || userMap[order.user_id]?.metadata?.email || null;
+      // Normalize email for case-insensitive lookup
+      const billingCountry = userEmail ? billingInfoMap[userEmail.toLowerCase().trim()] : null;
+      
+      // Calculate EUR amount
+      let eurAmount = null;
+      if (order.currency && order.currency.toUpperCase() === 'EUR') {
+        // Already in EUR
+        eurAmount = calculateTotalAmount(order);
+      } else if (order.currency && currencyRates[order.currency]) {
+        // Convert to EUR using the exchange rate
+        const totalAmount = calculateTotalAmount(order);
+        const rate = currencyRates[order.currency].rate;
+        eurAmount = totalAmount / rate;
+      }
+
+      return {
+        ...order,
+        user: userMap[order.user_id] || null,
+        user_email: userEmail,
+        billing_country: billingCountry,
+        eur_amount: eurAmount,
+        currency_rate: order.currency ? currencyRates[order.currency]?.rate : null,
+      };
+    });
+
+    // Helper function to calculate total amount
+    function calculateTotalAmount(order) {
+      const modifiedAmount = order.modified_amount || 0;
+      const fee = order.fee || 0;
+      const vat = order.vat || 0;
+      return (modifiedAmount + fee + vat) / 100; // Convert from cents
+    }
+
+    // Step 7: Filter by email if provided (client-side)
     if (userEmail) {
       enrichedOrders = enrichedOrders.filter(order => 
         order.user_email?.toLowerCase().includes(userEmail.toLowerCase())
@@ -105,6 +190,192 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
   } catch (error) {
     console.error("Merge user info into orders failed:", error);
     throw error;
+  }
+};
+
+/**
+ * Get order statistics for infographics (all orders in date range, not paginated)
+ */
+export const getOrderStatistics = async ({ fromDate, toDate }) => {
+  try {
+    // Fetch all orders matching only date filters - handle pagination to get all records
+    let allOrders = [];
+    let hasMore = true;
+    let rangeStart = 0;
+    const pageSize = 1000; // Supabase max limit
+
+    while (hasMore) {
+      const rangeEnd = rangeStart + pageSize - 1;
+      
+      const orderRes = await api(() => {
+        let query = supabase
+          .from("user_order")
+          .select("*", { count: "exact" })
+          .order("created_at", { ascending: false })
+          .range(rangeStart, rangeEnd);
+
+        // Date range filters only
+        if (fromDate) {
+          query = query.gte("created_at", fromDate);
+        }
+
+        if (toDate) {
+          const nextDay = new Date(toDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          query = query.lt("created_at", nextDay.toISOString());
+        }
+
+        return query;
+      });
+
+      if (!orderRes.data || orderRes.data.length === 0) {
+        hasMore = false;
+      } else {
+        allOrders = [...allOrders, ...orderRes.data];
+        
+        // Check if we've fetched all records
+        if (orderRes.data.length < pageSize) {
+          hasMore = false;
+        } else {
+          rangeStart += pageSize;
+        }
+      }
+    }
+
+    if (allOrders.length === 0) {
+      return {
+        successCount: 0,
+        totalCount: 0,
+        totalRevenueEUR: 0,
+        topCountries: [],
+        pendingCount: 0,
+        refundedCount: 0,
+        avgOrderValue: 0,
+      };
+    }
+
+    const orders = allOrders;
+
+    // Fetch currency exchange rates
+    const { data: currencyData } = await supabase
+      .from("currency")
+      .select("name, rate, default_currency");
+
+    const currencyRates = currencyData 
+      ? Object.fromEntries(currencyData.map(c => [c.name, { rate: c.rate, default_currency: c.default_currency }]))
+      : {};
+
+    // Fetch billing information for all orders
+    const userIds = [...new Set(orders.map((order) => order.user_id).filter(id => id !== null))];
+    let billingInfoMap = {};
+    
+    if (userIds.length > 0) {
+      // Fetch user emails
+      const { data: allAuthUsersResponse } = await supabase.auth.admin.listUsers();
+      const relevantAuthUsers = allAuthUsersResponse?.users?.filter(u => userIds.includes(u.id)) || [];
+      const userIdToEmailMap = Object.fromEntries(relevantAuthUsers.map((u) => [u.id, u.email]));
+      
+      // Fetch all billing information
+      const { data: billingData } = await supabase
+        .from("billing_information")
+        .select("email, country");
+
+      if (billingData) {
+        // Create map from email to country (normalized)
+        const emailToCountryMap = Object.fromEntries(
+          billingData.map(b => [b.email.toLowerCase().trim(), b.country])
+        );
+        
+        // Map user_id to billing country
+        userIds.forEach(userId => {
+          const email = userIdToEmailMap[userId];
+          if (email) {
+            const country = emailToCountryMap[email.toLowerCase().trim()];
+            if (country) {
+              billingInfoMap[userId] = country;
+            }
+          }
+        });
+      }
+    }
+
+    // Helper function to calculate total amount
+    const calculateTotalAmount = (order) => {
+      const modifiedAmount = order.modified_amount || 0;
+      const fee = order.fee || 0;
+      const vat = order.vat || 0;
+      return (modifiedAmount + fee + vat) / 100;
+    };
+
+    // Calculate EUR amounts for all orders
+    const ordersWithEUR = orders.map(order => {
+      let eurAmount = null;
+      if (order.currency && order.currency.toUpperCase() === 'EUR') {
+        eurAmount = calculateTotalAmount(order);
+      } else if (order.currency && currencyRates[order.currency]) {
+        const totalAmount = calculateTotalAmount(order);
+        const rate = currencyRates[order.currency].rate;
+        eurAmount = totalAmount / rate;
+      }
+      return { 
+        ...order, 
+        eur_amount: eurAmount,
+        billing_country: billingInfoMap[order.user_id] || null
+      };
+    });
+
+    // Calculate statistics
+    const successOrders = ordersWithEUR.filter(order => order.payment_status === 'success');
+    const pendingOrders = ordersWithEUR.filter(order => order.payment_status === 'pending');
+    const refundedOrders = ordersWithEUR.filter(order => order.payment_status === 'refunded');
+    const totalRevenueEUR = successOrders.reduce((sum, order) => sum + (order.eur_amount || 0), 0);
+    const avgOrderValue = successOrders.length > 0 ? totalRevenueEUR / successOrders.length : 0;
+
+    // Calculate top 3 countries by successful orders count and revenue
+    const countryStats = {};
+    successOrders.forEach(order => {
+      const country = order.billing_country;
+      if (country) {
+        if (!countryStats[country]) {
+          countryStats[country] = {
+            country: country,
+            count: 0,
+            revenue: 0,
+          };
+        }
+        countryStats[country].count += 1;
+        countryStats[country].revenue += order.eur_amount || 0;
+      }
+    });
+
+    // Sort by count (primary) and revenue (secondary), then take top 3
+    const topCountries = Object.values(countryStats)
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return b.revenue - a.revenue;
+      })
+      .slice(0, 3);
+
+    return {
+      successCount: successOrders.length,
+      totalCount: orders.length,
+      totalRevenueEUR: totalRevenueEUR,
+      topCountries: topCountries,
+      pendingCount: pendingOrders.length,
+      refundedCount: refundedOrders.length,
+      avgOrderValue: avgOrderValue,
+    };
+  } catch (error) {
+    console.error("Failed to fetch order statistics:", error);
+    return {
+      successCount: 0,
+      totalCount: 0,
+      totalRevenueEUR: 0,
+      topCountries: [],
+      pendingCount: 0,
+      refundedCount: 0,
+      avgOrderValue: 0,
+    };
   }
 };
 

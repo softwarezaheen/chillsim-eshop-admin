@@ -36,7 +36,8 @@ import Filters from "../../Components/Filters/Filters";
 import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
 import TagComponent from "../../Components/shared/tag-component/TagComponent";
-import { getAllOrders, refundOrder } from "../../core/apis/ordersAPI";
+import CustomDatePicker from "../../Components/CustomDatePicker";
+import { getAllOrders, refundOrder, getOrderStatistics } from "../../core/apis/ordersAPI";
 
 function OrdersPage() {
   const [loading, setLoading] = useState(null);
@@ -51,19 +52,34 @@ function OrdersPage() {
     data: null 
   });
   
+  // Statistics for infographic cards
+  const [statistics, setStatistics] = useState({
+    successCount: 0,
+    totalCount: 0,
+    totalRevenueEUR: 0,
+    topCountries: [],
+    pendingCount: 0,
+    refundedCount: 0,
+    avgOrderValue: 0,
+  });
+  
   // Filter states
   const [inputFilters, setInputFilters] = useState({
     userEmail: '',
-    orderStatus: '',
+    orderStatus: 'success',
     orderType: '',
     paymentType: '',
+    fromDate: null,
+    toDate: null,
   });
   
   const [appliedFilters, setAppliedFilters] = useState({
     userEmail: '',
-    orderStatus: '',
+    orderStatus: 'success',
     orderType: '',
     paymentType: '',
+    fromDate: null,
+    toDate: null,
   });
 
   const [searchQueries, setSearchQueries] = useState({
@@ -76,8 +92,9 @@ function OrdersPage() {
 
     try {
       const { page, pageSize } = searchQueries;
-      const { userEmail, orderStatus, orderType, paymentType } = appliedFilters;
+      const { userEmail, orderStatus, orderType, paymentType, fromDate, toDate } = appliedFilters;
       
+      // Fetch paginated orders
       const result = await getAllOrders({
         page,
         pageSize,
@@ -85,21 +102,32 @@ function OrdersPage() {
         orderStatus: orderStatus || null,
         orderType: orderType || null,
         paymentType: paymentType || null,
+        fromDate: fromDate || null,
+        toDate: toDate || null,
+      });
+
+      // Fetch statistics for all orders (not paginated)
+      const stats = await getOrderStatistics({
+        fromDate: fromDate || null,
+        toDate: toDate || null,
       });
 
       if (result?.error) {
         toast.error(result?.error);
         setData([]);
         setTotalRows(0);
+        setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0 });
       } else {
         setTotalRows(result?.count || 0);
         setData(result?.data || []);
+        setStatistics(stats);
       }
     } catch (e) {
       console.error("Failed to load orders:", e);
       toast.error("Failed to load orders");
       setData([]);
       setTotalRows(0);
+      setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0 });
     } finally {
       setLoading(false);
     }
@@ -113,15 +141,19 @@ function OrdersPage() {
   const resetFilters = () => {
     setInputFilters({
       userEmail: '',
-      orderStatus: '',
+      orderStatus: 'success',
       orderType: '',
       paymentType: '',
+      fromDate: null,
+      toDate: null,
     });
     setAppliedFilters({
       userEmail: '',
-      orderStatus: '',
+      orderStatus: 'success',
       orderType: '',
       paymentType: '',
+      fromDate: null,
+      toDate: null,
     });
     setSearchQueries({ pageSize: 10, page: 0 });
   };
@@ -227,15 +259,328 @@ function OrdersPage() {
     { name: "" }, // Expand icon
     { name: "Date" },
     { name: "User Email" },
+    { name: "Billing Country" },
     { name: "Status" },
     { name: "Product" },
     { name: "Type" },
     { name: "Total Amount" },
+    { name: "EUR Amount" },
     { name: "Actions" },
   ];
 
   return (
     <Card className="page-card">
+      {/* Statistics Cards */}
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={3}>
+          {/* Success Orders & Breakdown Card */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Card sx={{ 
+              p: 3, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: 2,
+              boxShadow: '0 4px 20px rgba(102, 126, 234, 0.3)',
+              minHeight: '280px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                Orders Overview
+              </Typography>
+              <Box sx={{ flex: 1 }}>
+                {/* Success Orders */}
+                <Box sx={{ 
+                  mb: 2,
+                  pb: 2,
+                  borderBottom: '1px solid rgba(255,255,255,0.2)'
+                }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
+                        <CountUp
+                          start={0}
+                          end={statistics.successCount}
+                          duration={2}
+                          separator=","
+                        />
+                      </Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                        Success Orders
+                      </Typography>
+                    </Box>
+                    <Box sx={{ 
+                      width: 48, 
+                      height: 48, 
+                      borderRadius: '50%', 
+                      background: 'rgba(255,255,255,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.5rem',
+                    }}>
+                      ✓
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Breakdown */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: 1,
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                      Pending
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <CountUp
+                        start={0}
+                        end={statistics.pendingCount}
+                        duration={2}
+                        separator=","
+                      />
+                    </Typography>
+                  </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: 1,
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                      Refunded
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <CountUp
+                        start={0}
+                        end={statistics.refundedCount}
+                        duration={2}
+                        separator=","
+                      />
+                    </Typography>
+                  </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    background: 'rgba(255,255,255,0.15)',
+                    borderRadius: 1,
+                    mt: 0.5,
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 'bold' }}>
+                      Success Rate
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <CountUp
+                        start={0}
+                        end={statistics.totalCount > 0 ? (statistics.successCount / statistics.totalCount * 100) : 0}
+                        duration={2}
+                        decimals={1}
+                        suffix="%"
+                      />
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+
+          {/* Top Countries Card */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Card sx={{ 
+              p: 3, 
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              color: 'white',
+              borderRadius: 2,
+              boxShadow: '0 4px 20px rgba(240, 147, 251, 0.3)',
+              minHeight: '280px',
+            }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                Top 3 Countries
+              </Typography>
+              {statistics.topCountries && statistics.topCountries.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {statistics.topCountries.map((country, index) => (
+                    <Box 
+                      key={country.country}
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        p: 1.5,
+                        background: 'rgba(255,255,255,0.15)',
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Box sx={{ 
+                          width: 32, 
+                          height: 32, 
+                          borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 'bold',
+                        }}>
+                          {index + 1}
+                        </Box>
+                        <Box>
+                          <Typography variant="body1" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
+                            {country.country}
+                          </Typography>
+                          <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                            {country.count} orders
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        €{country.revenue.toFixed(2)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  height: '200px',
+                  opacity: 0.6
+                }}>
+                  <Typography variant="body2">
+                    No country data available
+                  </Typography>
+                </Box>
+              )}
+            </Card>
+          </Grid>
+
+          {/* Total Revenue & Metrics Card */}
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Card sx={{ 
+              p: 3, 
+              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              color: 'white',
+              borderRadius: 2,
+              boxShadow: '0 4px 20px rgba(79, 172, 254, 0.3)',
+              minHeight: '280px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                Revenue Metrics
+              </Typography>
+              <Box sx={{ flex: 1 }}>
+                {/* Total Revenue */}
+                <Box sx={{ 
+                  mb: 2,
+                  pb: 2,
+                  borderBottom: '1px solid rgba(255,255,255,0.2)'
+                }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>
+                        €<CountUp
+                          start={0}
+                          end={statistics.totalRevenueEUR}
+                          duration={2}
+                          separator=","
+                          decimals={2}
+                        />
+                      </Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                        Total Revenue
+                      </Typography>
+                    </Box>
+                    <Box sx={{ 
+                      width: 48, 
+                      height: 48, 
+                      borderRadius: '50%', 
+                      background: 'rgba(255,255,255,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.5rem',
+                    }}>
+                      💰
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Metrics */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: 1,
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                      Avg Order Value
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      €<CountUp
+                        start={0}
+                        end={statistics.avgOrderValue}
+                        duration={2}
+                        separator=","
+                        decimals={2}
+                      />
+                    </Typography>
+                  </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: 1,
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                      Total Orders
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <CountUp
+                        start={0}
+                        end={statistics.totalCount}
+                        duration={2}
+                        separator=","
+                      />
+                    </Typography>
+                  </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    p: 1,
+                    background: 'rgba(255,255,255,0.15)',
+                    borderRadius: 1,
+                    mt: 0.5,
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 'bold' }}>
+                      Successful Orders
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                      <CountUp
+                        start={0}
+                        end={statistics.successCount}
+                        duration={2}
+                        separator=","
+                      />
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+
       <Filters
         onReset={resetFilters}
         onApply={applyFilter}
@@ -299,6 +644,24 @@ function OrdersPage() {
               </Select>
             </FormControl>
           </Grid>
+
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <CustomDatePicker
+              value={inputFilters.fromDate}
+              onChange={(date) => setInputFilters({ ...inputFilters, fromDate: date })}
+              placeholder="From Date"
+              label="From Date"
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 3 }}>
+            <CustomDatePicker
+              value={inputFilters.toDate}
+              onChange={(date) => setInputFilters({ ...inputFilters, toDate: date })}
+              placeholder="To Date"
+              label="To Date"
+            />
+          </Grid>
         </Grid>
       </Filters>
 
@@ -334,6 +697,10 @@ function OrdersPage() {
 
                 <TableCell sx={{ minWidth: "200px" }}>
                   {order.user_email || "N/A"}
+                </TableCell>
+
+                <TableCell sx={{ minWidth: "120px" }}>
+                  {order.billing_country || "N/A"}
                 </TableCell>
 
                 <TableCell sx={{ minWidth: "120px" }}>
@@ -377,6 +744,25 @@ function OrdersPage() {
                   </div>
                 </TableCell>
 
+                <TableCell sx={{ minWidth: "150px" }}>
+                  <div className="font-semibold">
+                    {order.eur_amount !== null ? (
+                      <>
+                        EUR{" "}
+                        <CountUp
+                          start={0}
+                          end={order.eur_amount}
+                          duration={1.5}
+                          separator=","
+                          decimals={2}
+                        />
+                      </>
+                    ) : (
+                      "N/A"
+                    )}
+                  </div>
+                </TableCell>
+
                 <TableCell sx={{ minWidth: "100px" }}>
                   {order.payment_status === 'success' && order.payment_type !== 'Wallet' && (
                     <IconButton
@@ -393,7 +779,7 @@ function OrdersPage() {
 
               {/* Expandable Details Row */}
               <RowComponent key={`${order.id}-details`} actions={false}>
-                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
+                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                     <Box sx={{ margin: 2, padding: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
                       <Typography variant="h6" gutterBottom component="div" sx={{ mb: 3 }}>
