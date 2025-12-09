@@ -69,21 +69,23 @@ export const getTrendsData = async (timeRange = 'current_year') => {
       return 0;
     };
 
-    // Process revenue by month
+    // Process revenue by month with year separation for comparison
     const revenueByMonth = {};
     const ordersByMonth = {};
     
     allOrders.forEach(order => {
       const date = new Date(order.created_at);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const monthKey = `${year}-${String(month).padStart(2, '0')}`;
       const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 
       // Initialize month data
       if (!revenueByMonth[monthKey]) {
-        revenueByMonth[monthKey] = { month: monthLabel, revenue: 0, sortKey: monthKey };
+        revenueByMonth[monthKey] = { month: monthLabel, revenue: 0, sortKey: monthKey, year, monthNum: month };
       }
       if (!ordersByMonth[monthKey]) {
-        ordersByMonth[monthKey] = { month: monthLabel, successful: 0, pending: 0, total: 0, sortKey: monthKey };
+        ordersByMonth[monthKey] = { month: monthLabel, successful: 0, pending: 0, total: 0, sortKey: monthKey, year, monthNum: month };
       }
 
       // Count orders
@@ -122,7 +124,7 @@ export const getTrendsData = async (timeRange = 'current_year') => {
       }
     }
 
-    // Process customers by month
+    // Process customers by month with year separation
     const customersByMonth = {};
     
     allUsers.forEach(user => {
@@ -135,24 +137,55 @@ export const getTrendsData = async (timeRange = 'current_year') => {
         return;
       }
       
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const monthKey = `${year}-${String(month).padStart(2, '0')}`;
       const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 
       if (!customersByMonth[monthKey]) {
-        customersByMonth[monthKey] = { month: monthLabel, count: 0, sortKey: monthKey };
+        customersByMonth[monthKey] = { month: monthLabel, count: 0, sortKey: monthKey, year, monthNum: month };
       }
       customersByMonth[monthKey].count += 1;
     });
 
-    // Convert to sorted arrays
-    const revenue = Object.values(revenueByMonth).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-    const orders = Object.values(ordersByMonth).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-    const customers = Object.values(customersByMonth).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    // Helper to calculate YoY comparison
+    const addYoYComparison = (dataByMonth) => {
+      const sorted = Object.values(dataByMonth).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+      
+      return sorted.map(item => {
+        const lastYearKey = `${item.year - 1}-${String(item.monthNum).padStart(2, '0')}`;
+        const lastYearData = dataByMonth[lastYearKey];
+        
+        const result = { ...item };
+        delete result.sortKey;
+        delete result.year;
+        delete result.monthNum;
+        
+        if (lastYearData) {
+          result.lastYear = {};
+          result.growth = {};
+          
+          // Copy all numeric fields for comparison
+          Object.keys(item).forEach(key => {
+            if (typeof item[key] === 'number' && key !== 'year' && key !== 'monthNum') {
+              result.lastYear[key] = lastYearData[key] || 0;
+              const diff = item[key] - (lastYearData[key] || 0);
+              result.growth[key] = {
+                absolute: diff,
+                percentage: lastYearData[key] ? ((diff / lastYearData[key]) * 100) : (item[key] > 0 ? 100 : 0)
+              };
+            }
+          });
+        }
+        
+        return result;
+      });
+    };
 
-    // Remove sortKey from final output
-    revenue.forEach(item => delete item.sortKey);
-    orders.forEach(item => delete item.sortKey);
-    customers.forEach(item => delete item.sortKey);
+    // Convert to sorted arrays with YoY comparison
+    const revenue = addYoYComparison(revenueByMonth);
+    const orders = addYoYComparison(ordersByMonth);
+    const customers = addYoYComparison(customersByMonth);
 
     return {
       revenue,

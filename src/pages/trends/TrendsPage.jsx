@@ -160,6 +160,19 @@ const TrendsPage = () => {
     return dataArray.reduce((sum, item) => sum + (item[key] || 0), 0);
   };
 
+  const formatGrowth = (growth, isRevenue = false) => {
+    if (!growth) return '-';
+    const abs = isRevenue ? `€${Math.abs(growth.absolute).toFixed(2)}` : Math.abs(growth.absolute);
+    const pct = growth.percentage.toFixed(1);
+    const color = growth.absolute >= 0 ? '#2e7d32' : '#c62828';
+    const icon = growth.absolute >= 0 ? '📈' : '📉';
+    return (
+      <span style={{ color, fontWeight: 600 }}>
+        {icon} {growth.absolute >= 0 ? '+' : '-'}{abs} ({growth.absolute >= 0 ? '+' : '-'}{pct}%)
+      </span>
+    );
+  };
+
   return (
     <Card className="page-card">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -206,6 +219,8 @@ const TrendsPage = () => {
                     <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                       <TableCell sx={{ fontWeight: 'bold' }}>Month</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Revenue (EUR)</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Last Year</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Growth</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -213,6 +228,12 @@ const TrendsPage = () => {
                       <TableRow key={index} hover>
                         <TableCell>{row.month}</TableCell>
                         <TableCell align="right">€{row.revenue.toFixed(2)}</TableCell>
+                        <TableCell align="right">
+                          {row.lastYear ? `€${row.lastYear.revenue.toFixed(2)}` : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {row.growth ? formatGrowth(row.growth.revenue, true) : '-'}
+                        </TableCell>
                       </TableRow>
                     ))}
                     <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
@@ -220,6 +241,8 @@ const TrendsPage = () => {
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                         €{calculateTotal(data.revenue, 'revenue').toFixed(2)}
                       </TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -239,8 +262,11 @@ const TrendsPage = () => {
                     <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                       <TableCell sx={{ fontWeight: 'bold' }}>Month</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Successful</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>vs Last Year</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Pending</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>vs Last Year</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>vs Last Year</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -248,8 +274,17 @@ const TrendsPage = () => {
                       <TableRow key={index} hover>
                         <TableCell>{row.month}</TableCell>
                         <TableCell align="right">{row.successful}</TableCell>
+                        <TableCell align="right">
+                          {row.growth ? formatGrowth(row.growth.successful) : '-'}
+                        </TableCell>
                         <TableCell align="right">{row.pending}</TableCell>
+                        <TableCell align="right">
+                          {row.growth ? formatGrowth(row.growth.pending) : '-'}
+                        </TableCell>
                         <TableCell align="right">{row.total}</TableCell>
+                        <TableCell align="right">
+                          {row.growth ? formatGrowth(row.growth.total) : '-'}
+                        </TableCell>
                       </TableRow>
                     ))}
                     <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
@@ -257,12 +292,15 @@ const TrendsPage = () => {
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                         {calculateTotal(data.orders, 'successful')}
                       </TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                         {calculateTotal(data.orders, 'pending')}
                       </TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                         {calculateTotal(data.orders, 'total')}
                       </TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -282,6 +320,8 @@ const TrendsPage = () => {
                     <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                       <TableCell sx={{ fontWeight: 'bold' }}>Month</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>New Customers</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Last Year</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>Growth</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -289,6 +329,12 @@ const TrendsPage = () => {
                       <TableRow key={index} hover>
                         <TableCell>{row.month}</TableCell>
                         <TableCell align="right">{row.count}</TableCell>
+                        <TableCell align="right">
+                          {row.lastYear ? row.lastYear.count : '-'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {row.growth ? formatGrowth(row.growth.count) : '-'}
+                        </TableCell>
                       </TableRow>
                     ))}
                     <TableRow sx={{ backgroundColor: '#e3f2fd' }}>
@@ -296,6 +342,8 @@ const TrendsPage = () => {
                       <TableCell align="right" sx={{ fontWeight: 'bold' }}>
                         {calculateTotal(data.customers, 'count')}
                       </TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>-</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
