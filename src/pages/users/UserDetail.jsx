@@ -1,6 +1,6 @@
 //UTILITIES
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 //component
 import { Card, TableCell, TablePagination } from "@mui/material";
@@ -20,7 +20,7 @@ const UserDetail = () => {
     page: 0,
   });
 
-  const getUserDevices = () => {
+  const getUserDevices = useCallback(() => {
     setLoading(true);
 
     try {
@@ -52,7 +52,7 @@ const UserDetail = () => {
       toast.error("Failed to load user devices");
       setLoading(false);
     }
-  };
+  }, [searchQueries, id]);
 
   const tableHeaders = [
     { name: "Deviced ID" },
@@ -65,7 +65,7 @@ const UserDetail = () => {
 
   useEffect(() => {
     getUserDevices();
-  }, [searchQueries]);
+  }, [getUserDevices]);
 
   return (
     <Card className="page-card">

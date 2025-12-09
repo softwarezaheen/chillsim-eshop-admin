@@ -1,6 +1,6 @@
 //UTILITIES
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 //COMPONENT
 import SearchIcon from "@mui/icons-material/Search";
 import {
@@ -36,7 +36,7 @@ function ContactusPage() {
     { name: "Created At" },
   ];
 
-  const getContactus = async () => {
+  const getContactus = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -69,11 +69,11 @@ function ContactusPage() {
       toast.error("Failed to load messages");
       setLoading(false);
     }
-  };
+  }, [searchQueries]);
 
   useEffect(() => {
     getContactus();
-  }, [searchQueries]);
+  }, [getContactus]);
 
   const resetFilters = () => {
     setSearchQueries({ name: "", pageSize: 10, page: 0 });

@@ -11,7 +11,7 @@ import {
   Tooltip
 } from "@mui/material";
 import { useTheme } from "@mui/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
@@ -40,7 +40,7 @@ const BundleList = () => {
     tags: [],
   });
 
-  const getBundles = async () => {
+  const getBundles = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -77,11 +77,11 @@ const BundleList = () => {
       toast.error(e?.message || "Fail to display data");
       setLoading(false);
     }
-  };
+  }, [searchQueries]);
 
   useEffect(() => {
     getBundles();
-  }, [searchQueries]);
+  }, [getBundles]);
 
   const resetFilters = () => {
     setSearchQueries({ ...searchQueries, name: "" });

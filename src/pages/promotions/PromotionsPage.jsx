@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Tabs, Tab, Box, Typography } from '@mui/material';
 import { toast } from 'react-toastify';
 import PromotionCodesTab from './PromotionCodesTab';
@@ -65,17 +65,7 @@ const PromotionsPage = () => {
     fetchPromotionRules();
   }, []);
 
-  useEffect(() => {
-    if (activeTab === 0) {
-      fetchPromotions();
-    } else if (activeTab === 1) {
-      fetchUsages();
-    } else if (activeTab === 2) {
-      fetchRules();
-    }
-  }, [activeTab, page, pageSize, filters]);
-
-  const fetchPromotions = async () => {
+  const fetchPromotions = useCallback(async () => {
     setLoading(true);
     // Convert date filters to UTC strings without timezone
     const processedFilters = { ...filters };
@@ -104,9 +94,9 @@ const PromotionsPage = () => {
       }
     }
     setLoading(false);
-  };
+  }, [filters, page, pageSize]);
 
-  const fetchUsages = async () => {
+  const fetchUsages = useCallback(async () => {
     setLoading(true);
     // Convert date filters to UTC strings without timezone
     const processedFilters = { ...filters };
@@ -129,7 +119,28 @@ const PromotionsPage = () => {
       }
     }
     setLoading(false);
-  };
+  }, [filters, page, pageSize]);
+
+  const fetchRules = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await getPromotionRules();
+    if (error) {
+      toast.error('Failed to fetch promotion rules');
+    } else {
+      setRules(data || []);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 0) {
+      fetchPromotions();
+    } else if (activeTab === 1) {
+      fetchUsages();
+    } else if (activeTab === 2) {
+      fetchRules();
+    }
+  }, [activeTab, fetchPromotions, fetchUsages, fetchRules]);
 
   const fetchRuleActions = async () => {
     const { data, error } = await getPromotionRuleActions();
@@ -150,17 +161,6 @@ const PromotionsPage = () => {
     if (!error) {
       setPromotionRules(data || []);
     }
-  };
-
-  const fetchRules = async () => {
-    setLoading(true);
-    const { data, error } = await getPromotionRules();
-    if (error) {
-      toast.error('Failed to fetch promotion rules');
-    } else {
-      setRules(data || []);
-    }
-    setLoading(false);
   };
 
   const handleAddPromotion = async () => {

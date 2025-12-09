@@ -1,6 +1,6 @@
 //UTILITIES
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { toast } from "react-toastify";
 //COMPONENT
@@ -33,7 +33,7 @@ function DevicesPage() {
   const [totalRows, setTotalRows] = useState(0);
   const [data, setData] = useState([]);
 
-  const getDevices = async () => {
+  const getDevices = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -66,11 +66,11 @@ function DevicesPage() {
 
       setLoading(false);
     }
-  };
+  }, [searchQueries]);
 
   useEffect(() => {
     getDevices();
-  }, [searchQueries]);
+  }, [getDevices]);
 
   const resetFilters = () => {
     setSearchQueries({

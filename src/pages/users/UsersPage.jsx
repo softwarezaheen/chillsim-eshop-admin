@@ -8,7 +8,7 @@ import {
   TextField,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Filters from "../../Components/Filters/Filters";
@@ -29,7 +29,7 @@ function UsersPage() {
   const [totalRows, setTotalRows] = useState(0);
   const [data, setData] = useState([]);
 
-  const getUsers = () => {
+  const getUsers = useCallback(() => {
     setLoading(true);
 
     try {
@@ -62,11 +62,11 @@ function UsersPage() {
       toast.error(e?.message || "Fail to display data");
       setLoading(false);
     }
-  };
+  }, [searchQueries]);
 
   useEffect(() => {
     getUsers();
-  }, [searchQueries]);
+  }, [getUsers]);
 
   const resetFilters = () => {
     setSearchQueries({ name: "", pageSize: 10, page: 0 });

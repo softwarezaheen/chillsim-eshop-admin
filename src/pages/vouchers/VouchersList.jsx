@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { TextField, Card, CardContent, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Checkbox, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import supabase from "../../core/apis/supabase";
 import GenerateVouchers from "./GenerateVouchers";
@@ -213,7 +213,7 @@ export default function VouchersList() {
     loadPartners();
   }, []);
 
-  const fetchVouchers = async () => {
+  const fetchVouchers = useCallback(async () => {
   setLoading(true);
     // First get filtered count to check if we need to adjust page offset
     let countQuery = supabase.from("voucher").select("*", { count: "exact", head: true });
@@ -345,7 +345,7 @@ export default function VouchersList() {
       }
     }
     setLoading(false);
-  };
+  }, [search, partner, used, active, exported, createdStart, createdEnd, updatedStart, updatedEnd, exportedStart, exportedEnd, usedBy, page, pageSize]);
 
   return (
     <Card className="page-card">

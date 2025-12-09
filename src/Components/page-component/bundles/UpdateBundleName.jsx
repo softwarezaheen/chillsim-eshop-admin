@@ -54,7 +54,7 @@ const UpdateBundleName = ({ onClose, data, refetchData }) => {
     if (data) {
       reset({ bundle_name: data?.bundle_name });
     }
-  }, [data]);
+  }, [data, reset]);
   return (
     <Dialog open={true} maxWidth="sm" fullWidth>
       <DialogContent className="flex flex-col gap-[1rem] xs:!px-8 !py-10 ">

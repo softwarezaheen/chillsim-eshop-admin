@@ -41,6 +41,7 @@ import { getAllOrders, refundOrder, getOrderStatistics } from "../../core/apis/o
 
 function OrdersPage() {
   const [loading, setLoading] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [totalRows, setTotalRows] = useState(0);
   const [data, setData] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
@@ -89,6 +90,7 @@ function OrdersPage() {
 
   const getOrders = async () => {
     setLoading(true);
+    setStatsLoading(true);
 
     try {
       const { page, pageSize } = searchQueries;
@@ -107,7 +109,7 @@ function OrdersPage() {
       });
 
       // Fetch statistics for all orders (not paginated)
-      const stats = await getOrderStatistics({
+      const statsPromise = getOrderStatistics({
         fromDate: fromDate || null,
         toDate: toDate || null,
       });
@@ -117,10 +119,15 @@ function OrdersPage() {
         setData([]);
         setTotalRows(0);
         setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0 });
+        setStatsLoading(false);
       } else {
         setTotalRows(result?.count || 0);
         setData(result?.data || []);
+        
+        // Wait for statistics to complete
+        const stats = await statsPromise;
         setStatistics(stats);
+        setStatsLoading(false);
       }
     } catch (e) {
       console.error("Failed to load orders:", e);
@@ -128,6 +135,7 @@ function OrdersPage() {
       setData([]);
       setTotalRows(0);
       setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0 });
+      setStatsLoading(false);
     } finally {
       setLoading(false);
     }
@@ -284,7 +292,25 @@ function OrdersPage() {
               minHeight: '280px',
               display: 'flex',
               flexDirection: 'column',
+              position: 'relative',
             }}>
+              {statsLoading && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(102, 126, 234, 0.9)',
+                  borderRadius: 2,
+                  zIndex: 1,
+                }}>
+                  <CircularProgress sx={{ color: 'white' }} />
+                </Box>
+              )}
               <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
                 Orders Overview
               </Typography>
@@ -399,7 +425,25 @@ function OrdersPage() {
               borderRadius: 2,
               boxShadow: '0 4px 20px rgba(240, 147, 251, 0.3)',
               minHeight: '280px',
+              position: 'relative',
             }}>
+              {statsLoading && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(240, 147, 251, 0.9)',
+                  borderRadius: 2,
+                  zIndex: 1,
+                }}>
+                  <CircularProgress sx={{ color: 'white' }} />
+                </Box>
+              )}
               <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
                 Top 3 Countries
               </Typography>
@@ -472,7 +516,25 @@ function OrdersPage() {
               minHeight: '280px',
               display: 'flex',
               flexDirection: 'column',
+              position: 'relative',
             }}>
+              {statsLoading && (
+                <Box sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(79, 172, 254, 0.9)',
+                  borderRadius: 2,
+                  zIndex: 1,
+                }}>
+                  <CircularProgress sx={{ color: 'white' }} />
+                </Box>
+              )}
               <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
                 Revenue Metrics
               </Typography>

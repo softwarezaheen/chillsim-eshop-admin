@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, CircularProgress, TablePagination } from "@mui/material";
 import Filters from "../../Components/Filters/Filters";
 import supabase from "../../core/apis/supabase";
@@ -15,11 +15,7 @@ export default function Partners() {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
 
-  useEffect(() => {
-    fetchPartners();
-  }, [search, page, pageSize]);
-
-  const fetchPartners = async () => {
+  const fetchPartners = useCallback(async () => {
     setLoading(true);
     let query = supabase
       .from("partners")
@@ -35,7 +31,11 @@ export default function Partners() {
       setTotalRows(count || 0);
     }
     setLoading(false);
-  };
+  }, [search, page, pageSize]);
+
+  useEffect(() => {
+    fetchPartners();
+  }, [fetchPartners]);
 
   const handleAdd = () => {
     setSelectedPartner(null);
