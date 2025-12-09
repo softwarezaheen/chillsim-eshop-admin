@@ -62,6 +62,8 @@ function OrdersPage() {
     pendingCount: 0,
     refundedCount: 0,
     avgOrderValue: 0,
+    payingCustomersCount: 0,
+    avgOrdersPerCustomer: 0,
   });
   
   // Filter states
@@ -112,7 +114,7 @@ function OrdersPage() {
         toast.error(result?.error);
         setData([]);
         setTotalRows(0);
-        setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0 });
+        setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0, payingCustomersCount: 0, avgOrdersPerCustomer: 0 });
         setStatsLoading(false);
       } else {
         setTotalRows(result?.count || 0);
@@ -135,7 +137,7 @@ function OrdersPage() {
       toast.error("Failed to load orders");
       setData([]);
       setTotalRows(0);
-      setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0 });
+      setStatistics({ successCount: 0, totalCount: 0, totalRevenueEUR: 0, topCountries: [], pendingCount: 0, refundedCount: 0, avgOrderValue: 0, payingCustomersCount: 0, avgOrdersPerCustomer: 0 });
       setStatsLoading(false);
     } finally {
       setLoading(false);
@@ -606,12 +608,12 @@ function OrdersPage() {
                     borderRadius: 1,
                   }}>
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                      Total Orders
+                      Paying Customers
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                       <CountUp
                         start={0}
-                        end={statistics.totalCount}
+                        end={statistics.payingCustomersCount}
                         duration={2}
                         separator=","
                       />
@@ -626,14 +628,14 @@ function OrdersPage() {
                     mt: 0.5,
                   }}>
                     <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 'bold' }}>
-                      Successful Orders
+                      Avg Orders/Customer
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                       <CountUp
                         start={0}
-                        end={statistics.successCount}
+                        end={statistics.avgOrdersPerCustomer}
                         duration={2}
-                        separator=","
+                        decimals={1}
                       />
                     </Typography>
                   </Box>

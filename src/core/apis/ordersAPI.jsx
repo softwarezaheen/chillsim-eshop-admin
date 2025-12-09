@@ -355,6 +355,15 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
     const totalRevenueEUR = successOrders.reduce((sum, order) => sum + (order.eur_amount || 0), 0);
     const avgOrderValue = successOrders.length > 0 ? totalRevenueEUR / successOrders.length : 0;
 
+    // Calculate unique paying customers (distinct user_id from successful orders)
+    const payingCustomers = new Set(
+      successOrders
+        .map(order => order.user_id)
+        .filter(id => id !== null)
+    );
+    const payingCustomersCount = payingCustomers.size;
+    const avgOrdersPerCustomer = payingCustomersCount > 0 ? successOrders.length / payingCustomersCount : 0;
+
     // Calculate top 3 countries by successful orders count and revenue
     const countryStats = {};
     successOrders.forEach(order => {
@@ -388,6 +397,8 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
       pendingCount: pendingOrders.length,
       refundedCount: refundedOrders.length,
       avgOrderValue: avgOrderValue,
+      payingCustomersCount: payingCustomersCount,
+      avgOrdersPerCustomer: avgOrdersPerCustomer,
     };
   } catch (error) {
     console.error("Failed to fetch order statistics:", error);
@@ -399,6 +410,8 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
       pendingCount: 0,
       refundedCount: 0,
       avgOrderValue: 0,
+      payingCustomersCount: 0,
+      avgOrdersPerCustomer: 0,
     };
   }
 };
