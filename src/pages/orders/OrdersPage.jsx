@@ -98,6 +98,16 @@ function OrdersPage() {
       const { page, pageSize } = searchQueries;
       const { userEmail, orderStatus, orderType, paymentType, fromDate, toDate } = appliedFilters;
       
+      // Format dates to YYYY-MM-DD without timezone
+      const formatDateForAPI = (date) => {
+        if (!date) return null;
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
       // Fetch paginated orders (don't wait for stats)
       const result = await getAllOrders({
         page,
@@ -106,8 +116,8 @@ function OrdersPage() {
         orderStatus: orderStatus || null,
         orderType: orderType || null,
         paymentType: paymentType || null,
-        fromDate: fromDate || null,
-        toDate: toDate || null,
+        fromDate: formatDateForAPI(fromDate),
+        toDate: formatDateForAPI(toDate),
       });
 
       if (result?.error) {
@@ -122,8 +132,8 @@ function OrdersPage() {
         
         // Fetch statistics in background (non-blocking)
         getOrderStatistics({
-          fromDate: fromDate || null,
-          toDate: toDate || null,
+          fromDate: formatDateForAPI(fromDate),
+          toDate: formatDateForAPI(toDate),
         }).then(stats => {
           setStatistics(stats);
           setStatsLoading(false);

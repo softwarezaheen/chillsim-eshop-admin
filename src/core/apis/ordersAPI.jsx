@@ -26,16 +26,15 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
         query = query.ilike("payment_type", paymentType);
       }
 
-      // Date range filters
+      // Date range filters (expecting YYYY-MM-DD format without timezone)
       if (fromDate) {
-        query = query.gte("created_at", fromDate);
+        // Add time to start of day in UTC
+        query = query.gte("created_at", `${fromDate}T00:00:00.000Z`);
       }
 
       if (toDate) {
-        // Add one day to toDate to include the entire day
-        const nextDay = new Date(toDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-        query = query.lt("created_at", nextDay.toISOString());
+        // Include entire day up to 23:59:59.999
+        query = query.lte("created_at", `${toDate}T23:59:59.999Z`);
       }
 
       // Note: Email filter cannot be applied here as emails are in auth.users
@@ -214,15 +213,14 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
           .order("created_at", { ascending: false })
           .range(rangeStart, rangeEnd);
 
-        // Date range filters only
+        // Date range filters only (expecting YYYY-MM-DD format without timezone)
         if (fromDate) {
-          query = query.gte("created_at", fromDate);
+          query = query.gte("created_at", `${fromDate}T00:00:00.000Z`);
         }
 
         if (toDate) {
-          const nextDay = new Date(toDate);
-          nextDay.setDate(nextDay.getDate() + 1);
-          query = query.lt("created_at", nextDay.toISOString());
+          // Include entire day up to 23:59:59.999
+          query = query.lte("created_at", `${toDate}T23:59:59.999Z`);
         }
 
         return query;
