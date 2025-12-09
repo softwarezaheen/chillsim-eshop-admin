@@ -270,9 +270,33 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
     let billingInfoMap = {};
     
     if (userIds.length > 0) {
-      // Fetch user emails
-      const { data: allAuthUsersResponse } = await supabase.auth.admin.listUsers();
-      const relevantAuthUsers = allAuthUsersResponse?.users?.filter(u => userIds.includes(u.id)) || [];
+      // Fetch user emails with pagination
+      let allAuthUsers = [];
+      let page = 1;
+      let hasMoreUsers = true;
+      const perPage = 1000;
+
+      while (hasMoreUsers) {
+        const { data: authUsersResponse } = await supabase.auth.admin.listUsers({
+          page,
+          perPage,
+        });
+        
+        if (authUsersResponse?.users && authUsersResponse.users.length > 0) {
+          allAuthUsers = [...allAuthUsers, ...authUsersResponse.users];
+          
+          // Check if we got a full page (indicating there might be more)
+          if (authUsersResponse.users.length < perPage) {
+            hasMoreUsers = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMoreUsers = false;
+        }
+      }
+
+      const relevantAuthUsers = allAuthUsers.filter(u => userIds.includes(u.id));
       const userIdToEmailMap = Object.fromEntries(relevantAuthUsers.map((u) => [u.id, u.email]));
       
       // Fetch all billing information

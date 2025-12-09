@@ -96,7 +96,7 @@ function OrdersPage() {
       const { page, pageSize } = searchQueries;
       const { userEmail, orderStatus, orderType, paymentType, fromDate, toDate } = appliedFilters;
       
-      // Fetch paginated orders
+      // Fetch paginated orders (don't wait for stats)
       const result = await getAllOrders({
         page,
         pageSize,
@@ -104,12 +104,6 @@ function OrdersPage() {
         orderStatus: orderStatus || null,
         orderType: orderType || null,
         paymentType: paymentType || null,
-        fromDate: fromDate || null,
-        toDate: toDate || null,
-      });
-
-      // Fetch statistics for all orders (not paginated)
-      const statsPromise = getOrderStatistics({
         fromDate: fromDate || null,
         toDate: toDate || null,
       });
@@ -124,10 +118,17 @@ function OrdersPage() {
         setTotalRows(result?.count || 0);
         setData(result?.data || []);
         
-        // Wait for statistics to complete
-        const stats = await statsPromise;
-        setStatistics(stats);
-        setStatsLoading(false);
+        // Fetch statistics in background (non-blocking)
+        getOrderStatistics({
+          fromDate: fromDate || null,
+          toDate: toDate || null,
+        }).then(stats => {
+          setStatistics(stats);
+          setStatsLoading(false);
+        }).catch(err => {
+          console.error("Failed to load statistics:", err);
+          setStatsLoading(false);
+        });
       }
     } catch (e) {
       console.error("Failed to load orders:", e);
@@ -742,7 +743,7 @@ function OrdersPage() {
           return (
             <>
               <RowComponent key={order.id} actions={false}>
-                <TableCell sx={{ width: '50px' }}>
+                <TableCell sx={{ width: '40px', padding: '8px' }}>
                   <IconButton
                     size="small"
                     onClick={() => setExpandedRow(isExpanded ? null : order.id)}
@@ -751,34 +752,40 @@ function OrdersPage() {
                   </IconButton>
                 </TableCell>
 
-                <TableCell sx={{ minWidth: "150px" }}>
+                <TableCell sx={{ minWidth: "130px" }}>
                   {order.created_at
                     ? dayjs(order.created_at).format("DD-MM-YYYY HH:mm")
                     : "N/A"}
                 </TableCell>
 
-                <TableCell sx={{ minWidth: "200px" }}>
-                  {order.user_email || "N/A"}
-                </TableCell>
-
-                <TableCell sx={{ minWidth: "120px" }}>
-                  {order.billing_country || "N/A"}
-                </TableCell>
-
-                <TableCell sx={{ minWidth: "120px" }}>
-                  <TagComponent value={order.payment_status} />
-                </TableCell>
-
-                <TableCell sx={{ minWidth: "250px" }}>
-                  <div>
-                    <div className="font-semibold">{bundleInfo.name}</div>
-                    {bundleInfo.subtitle && (
-                      <div className="text-xs text-gray-500 mt-1">{bundleInfo.subtitle}</div>
-                    )}
+                <TableCell sx={{ minWidth: "150px", maxWidth: "180px" }}>
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {order.user_email || "N/A"}
                   </div>
                 </TableCell>
 
                 <TableCell sx={{ minWidth: "100px" }}>
+                  {order.billing_country || "N/A"}
+                </TableCell>
+
+                <TableCell sx={{ minWidth: "100px" }}>
+                  <TagComponent value={order.payment_status} />
+                </TableCell>
+
+                <TableCell sx={{ minWidth: "180px", maxWidth: "200px" }}>
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div className="font-semibold" style={{ fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {bundleInfo.name}
+                    </div>
+                    {bundleInfo.subtitle && (
+                      <div className="text-xs text-gray-500" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {bundleInfo.subtitle}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+
+                <TableCell sx={{ minWidth: "90px" }}>
                   <Chip 
                     label={order.order_type || "N/A"} 
                     size="small"
@@ -786,8 +793,8 @@ function OrdersPage() {
                   />
                 </TableCell>
 
-                <TableCell sx={{ minWidth: "150px" }}>
-                  <div className="font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <TableCell sx={{ minWidth: "120px" }}>
+                  <div className="font-semibold" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.875rem' }}>
                     <span>
                       {order.currency}{" "}
                       <CountUp
@@ -799,15 +806,15 @@ function OrdersPage() {
                       />
                     </span>
                     {order.payment_type === 'Wallet' ? (
-                      <WalletIcon sx={{ fontSize: 20, color: '#9c27b0' }} />
+                      <WalletIcon sx={{ fontSize: 16, color: '#9c27b0' }} />
                     ) : order.payment_type === 'Card' ? (
-                      <CreditCardIcon sx={{ fontSize: 20, color: '#1976d2' }} />
+                      <CreditCardIcon sx={{ fontSize: 16, color: '#1976d2' }} />
                     ) : null}
                   </div>
                 </TableCell>
 
-                <TableCell sx={{ minWidth: "150px" }}>
-                  <div className="font-semibold">
+                <TableCell sx={{ minWidth: "110px" }}>
+                  <div className="font-semibold" style={{ fontSize: '0.875rem' }}>
                     {order.eur_amount !== null ? (
                       <>
                         EUR{" "}
@@ -825,7 +832,7 @@ function OrdersPage() {
                   </div>
                 </TableCell>
 
-                <TableCell sx={{ minWidth: "100px" }}>
+                <TableCell sx={{ minWidth: "80px" }}>
                   {order.payment_status === 'success' && order.payment_type !== 'Wallet' && (
                     <IconButton
                       size="small"
