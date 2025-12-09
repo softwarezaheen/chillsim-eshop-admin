@@ -5,6 +5,23 @@ export const MenuRoutes = [
     parentName: null,
     parentGuid: null,
     displayOrder: 0,
+    uri: "trends",
+    iconUri: "fa-chart-line",
+    recordGuid: "0",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Trends",
+        description: "Trends Analytics",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 1,
     uri: "users",
     iconUri: "fa-user",
     recordGuid: "1",
@@ -21,7 +38,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 1,
+    displayOrder: 2,
     uri: "devices",
     iconUri: "fa-mobile",
     recordGuid: "2",
@@ -51,7 +68,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 2,
+    displayOrder: 3,
     uri: "orders",
     iconUri: "fa-file-invoice-dollar",
     recordGuid: "3",
@@ -68,7 +85,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 3,
+    displayOrder: 4,
     uri: "financial",
     iconUri: "fa-coins",
     recordGuid: "10",
@@ -85,7 +102,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 4,
+    displayOrder: 5,
     uri: "contact-us",
     iconUri: "fa-phone",
     recordGuid: "4",
@@ -102,7 +119,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 5,
+    displayOrder: 6,
     uri: "bundles",
     iconUri: "fa-sim-card",
     recordGuid: "5",
@@ -119,7 +136,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 6,
+    displayOrder: 7,
     uri: "partners",
     iconUri: "fa-users",
     recordGuid: "6",
@@ -136,7 +153,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 7,
+    displayOrder: 8,
     uri: "vouchers",
     iconUri: "fa-ticket",
     recordGuid: "7",
@@ -153,7 +170,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 8,
+    displayOrder: 9,
     uri: "promotions",
     iconUri: "fa-gift",
     recordGuid: "8",
@@ -170,7 +187,7 @@ export const MenuRoutes = [
   {
     parentName: null,
     parentGuid: null,
-    displayOrder: 9,
+    displayOrder: 10,
     uri: "app-content",
     iconUri: "fa-file-text",
     recordGuid: "9",

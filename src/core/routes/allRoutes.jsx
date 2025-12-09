@@ -12,6 +12,7 @@ import ChangePasswordPage from "../../pages/authentication/ChangePasswordPage";
 import VouchersList from "../../pages/vouchers/VouchersList";
 import Partners from "../../pages/partners/Partners";
 import PromotionsPage from "../../pages/promotions/PromotionsPage";
+import TrendsPage from "../../pages/trends/TrendsPage";
 
 // App Content Pages
 import FAQPage from "../../pages/app-content/FAQPage";
@@ -51,6 +52,13 @@ export const privateRoutes = [
         key: "/users",
         name: "Devices",
         regex: "^/devices/?$",
+      },
+      {
+        path: "/trends",
+        element: <TrendsPage />,
+        key: "/trends",
+        name: "Trends",
+        regex: "^/trends/?$",
       },
       {
         path: "/orders",
