@@ -2,6 +2,7 @@
 import PageNotFound from "../../Components/shared/fallbacks/page-not-found/PageNotFound";
 import SignInPage from "../../pages/authentication/SignInPage";
 import BundlesList from "../../pages/bundles/BundlesList";
+import XMLFeedManagement from "../../pages/bundles/XMLFeedManagement";
 import ContactusPage from "../../pages/contact-us/ContactusPage";
 import DevicesPage from "../../pages/devices/DevicesPage";
 import OrdersPage from "../../pages/orders/OrdersPage";
@@ -94,6 +95,13 @@ export const privateRoutes = [
         key: "/bundles",
         name: "Bundles",
         regex: "^/bundles/?$",
+      },
+      {
+        path: "/bundles/xml-feed",
+        element: <XMLFeedManagement />,
+        key: "/bundles/xml-feed",
+        name: "XML Feed",
+        regex: "^/bundles/xml-feed/?$",
       },
       {
         path: "/change-password",

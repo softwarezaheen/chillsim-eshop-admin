@@ -134,6 +134,40 @@ export const MenuRoutes = [
     ],
   },
   {
+    parentName: "Bundles",
+    parentGuid: "5",
+    displayOrder: 0,
+    uri: "bundles",
+    iconUri: "fa-list",
+    recordGuid: "5-1",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Bundle List",
+        description: "Bundle List",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: "Bundles",
+    parentGuid: "5",
+    displayOrder: 1,
+    uri: "bundles/xml-feed",
+    iconUri: "fa-rss",
+    recordGuid: "5-2",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "XML Feed",
+        description: "XML Feed Management",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
     parentName: null,
     parentGuid: null,
     displayOrder: 7,
