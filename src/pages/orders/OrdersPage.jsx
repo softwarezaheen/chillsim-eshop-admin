@@ -260,7 +260,12 @@ function OrdersPage() {
     const modifiedAmount = order.modified_amount || 0;
     const fee = order.fee || 0;
     const vat = order.vat || 0;
-    return (modifiedAmount + fee + vat) / 100; // Convert from cents
+    // For exclusive mode, add VAT on top; for inclusive/none, VAT is already in amount
+    if (order.tax_mode === 'exclusive') {
+      return (modifiedAmount + fee + vat) / 100; // Convert from cents
+    }
+    // inclusive or none mode - VAT already included
+    return (modifiedAmount + fee) / 100;
   };
 
   const getBundleInfo = (bundleData) => {
@@ -284,6 +289,7 @@ function OrdersPage() {
     { name: "Status" },
     { name: "Product" },
     { name: "Type" },
+    { name: "Tax Mode" },
     { name: "Total Amount" },
     { name: "EUR Amount" },
     { name: "Actions" },
@@ -802,6 +808,19 @@ function OrdersPage() {
                     label={order.order_type || "N/A"} 
                     size="small"
                     color={order.order_type === 'topup' ? 'secondary' : 'default'}
+                  />
+                </TableCell>
+
+                <TableCell sx={{ minWidth: "90px" }}>
+                  <Chip 
+                    label={order.tax_mode || "exclusive"} 
+                    size="small"
+                    color={
+                      order.tax_mode === 'inclusive' ? 'success' : 
+                      order.tax_mode === 'none' ? 'warning' : 
+                      'default'
+                    }
+                    variant="outlined"
                   />
                 </TableCell>
 
