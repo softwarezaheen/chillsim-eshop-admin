@@ -59,7 +59,16 @@ export const getTrendsData = async (timeRange = 'current_year') => {
 
     // Helper to calculate EUR amount
     const calculateEurAmount = (order) => {
-      const totalAmount = ((order.modified_amount || 0) + (order.fee || 0) + (order.vat || 0)) / 100;
+      const modifiedAmount = order.modified_amount || 0;
+      const fee = order.fee || 0;
+      const vat = order.vat || 0;
+      
+      // For inclusive tax mode, VAT is already included in the amount
+      // For exclusive tax mode (or none), VAT needs to be added
+      const taxMode = order.tax_mode || 'exclusive';
+      const vatToAdd = taxMode === 'inclusive' ? 0 : vat;
+      
+      const totalAmount = (modifiedAmount + fee + vatToAdd) / 100;
       
       if (order.currency && order.currency.toUpperCase() === 'EUR') {
         return totalAmount;

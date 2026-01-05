@@ -163,7 +163,13 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
       const modifiedAmount = order.modified_amount || 0;
       const fee = order.fee || 0;
       const vat = order.vat || 0;
-      return (modifiedAmount + fee + vat) / 100; // Convert from cents
+      
+      // For inclusive tax mode, VAT is already included in the amount
+      // For exclusive tax mode (or none), VAT needs to be added
+      const taxMode = order.tax_mode || 'exclusive';
+      const vatToAdd = taxMode === 'inclusive' ? 0 : vat;
+      
+      return (modifiedAmount + fee + vatToAdd) / 100; // Convert from cents
     }
 
     // Step 7: Filter by email if provided (client-side)
