@@ -121,6 +121,13 @@ const BundleDetail = ({ onClose, bundle }) => {
                   {bundle?.activity_policy || "N/A"}
                 </p>
               </div>
+              <hr className={"bg-(--border-shade-600) h-[2px]"} />
+              <div>
+                <div className={"text-content-600"}>Countries ({bundle?.countries_count || 0})</div>
+                <p className={"font-semibold break-words text-sm"}>
+                  {bundle?.country_codes || "N/A"}
+                </p>
+              </div>
             </div>
           </div>
         </div>

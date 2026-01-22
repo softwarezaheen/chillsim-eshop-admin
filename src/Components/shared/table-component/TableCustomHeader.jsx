@@ -35,6 +35,8 @@ export function TableCustomHeader(props) {
               >
                 {item.name}
               </TableSortLabel>
+            ) : item.customContent ? (
+              item.customContent
             ) : (
               item.name
             )}
