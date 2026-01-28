@@ -20,11 +20,9 @@ const InvoicePreviewModal = ({ open, onClose, document }) => {
 
   // Calculate tax percentage
   const calculateTaxPercentage = () => {
-    if (isInvoice && docData?.subtotal && docData?.tax_amount) {
-      return Math.round((docData.tax_amount / docData.subtotal) * 100);
-    }
-    if (!isInvoice && docData?.credit_note?.subtotal && docData?.credit_note?.tax) {
-      return Math.round((docData.credit_note.tax / docData.credit_note.subtotal) * 100);
+    // For both invoices and credit notes, use the top-level fields
+    if (docData?.subtotal && docData?.tax_amount) {
+      return Math.ceil((docData.tax_amount / docData.subtotal) * 100);
     }
     return 0;
   };
@@ -132,6 +130,12 @@ const InvoicePreviewModal = ({ open, onClose, document }) => {
           <span className="label">Total Amount:</span>
           <span className="amount">{docData?.total_amount} {docData?.currency}</span>
         </div>
+        {docData?.exchange_rate && docData?.default_currency && (
+          <div className="totals-row" style={{ fontSize: '10px', color: '#666', borderTop: '1px solid #dee2e6', paddingTop: '8px', marginTop: '8px' }}>
+            <span className="label">Exchange Rate:</span>
+            <span className="amount">1 {docData.default_currency} = {docData.exchange_rate.toFixed(4)} {docData.currency}</span>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -251,6 +255,12 @@ const InvoicePreviewModal = ({ open, onClose, document }) => {
           <span className="label">Total Refund:</span>
           <span className="amount">{docData?.total_amount} {docData?.currency}</span>
         </div>
+        {docData?.exchange_rate && docData?.default_currency && (
+          <div className="totals-row" style={{ fontSize: '10px', color: '#666', borderTop: '1px solid #dee2e6', paddingTop: '8px', marginTop: '8px' }}>
+            <span className="label">Exchange Rate:</span>
+            <span className="amount">1 {docData.default_currency} = {docData.exchange_rate.toFixed(4)} {docData.currency}</span>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
