@@ -18,13 +18,22 @@ const InvoicePreviewModal = ({ open, onClose, document }) => {
   const docData = document.data;
   const currentYear = new Date().getFullYear();
 
-  // Calculate tax percentage
-  const calculateTaxPercentage = () => {
-    // For both invoices and credit notes, use the top-level fields
-    if (docData?.subtotal && docData?.tax_amount) {
-      return Math.ceil((docData.tax_amount / docData.subtotal) * 100);
+  // Get tax percentage from API response (backend provides properly rounded value)
+  // Fallback to recalculation only if tax_percentage is not provided
+  const getTaxPercentage = () => {
+    // Use tax_percentage from API if available (single source of truth)
+    if (docData?.tax_percentage) {
+      return docData.tax_percentage; // Already formatted as "21%"
     }
-    return 0;
+    
+    // Fallback: calculate with proper ROUND_HALF_UP (not ceil!)
+    // Only used for legacy data or if API doesn't provide tax_percentage
+    if (docData?.subtotal && docData?.tax_amount) {
+      const percentage = (docData.tax_amount / docData.subtotal) * 100;
+      // Use Math.round() which implements ROUND_HALF_UP
+      return `${Math.round(percentage)}%`;
+    }
+    return '0%';
   };
 
   const renderInvoice = () => (
@@ -122,7 +131,7 @@ const InvoicePreviewModal = ({ open, onClose, document }) => {
         </div>
         {docData?.tax_amount && (
           <div className="totals-row">
-            <span className="label">Tax ({calculateTaxPercentage()}%):</span>
+            <span className="label">Tax ({getTaxPercentage()}):</span>
             <span className="amount">{docData.tax_amount} {docData?.currency}</span>
           </div>
         )}
@@ -248,7 +257,7 @@ const InvoicePreviewModal = ({ open, onClose, document }) => {
           <span className="amount negative-amount">{docData?.subtotal} {docData?.currency}</span>
         </div>
         <div className="totals-row">
-          <span className="label">Tax ({calculateTaxPercentage()}%):</span>
+          <span className="label">Tax ({getTaxPercentage()}):</span>
           <span className="amount negative-amount">{docData?.tax_amount} {docData?.currency}</span>
         </div>
         <div className="totals-row total-refund">
