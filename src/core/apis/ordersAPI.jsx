@@ -421,17 +421,18 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
 };
 
 /**
- * Refund an order via Stripe
+ * Refund an order (works for both Stripe and wallet payments)
  * @param {string} orderId - The order ID
- * @param {string} paymentIntentId - The Stripe payment intent ID
+ * @param {string} paymentIntentId - The Stripe payment intent ID (for card payments)
  * @param {number} amount - Optional: Amount to refund in cents
  * @returns {Promise} Refund result
  */
-export const refundOrder = async ({ orderId, paymentIntentId, amount = null }) => {
+export const refundOrder = async ({ orderId, paymentIntentId = null, amount = null }) => {
   try {
-    // Step 1: Create refund in Stripe
+    // Step 1: Create refund via API (supports both Stripe and wallet)
     const refundResult = await createRefund({
       paymentIntentId,
+      orderId: paymentIntentId ? null : orderId,  // Use orderId for wallet payments
       amount,
       reason: 'requested_by_customer',
     });

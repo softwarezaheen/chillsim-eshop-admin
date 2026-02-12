@@ -191,7 +191,10 @@ function OrdersPage() {
   const confirmRefund = async () => {
     const order = refundDialog.order;
     
-    if (!order.payment_intent_code) {
+    // For wallet payments, use order_id instead of payment_intent_code
+    const isWalletPayment = order.payment_type === 'Wallet';
+    
+    if (!isWalletPayment && !order.payment_intent_code) {
       toast.error('No payment intent found for this order');
       setRefundDialog({ open: false, order: null });
       return;
@@ -202,7 +205,7 @@ function OrdersPage() {
     try {
       const result = await refundOrder({
         orderId: order.id,
-        paymentIntentId: order.payment_intent_code,
+        paymentIntentId: isWalletPayment ? null : order.payment_intent_code,
         amount: null, // Full refund
       });
 
@@ -864,7 +867,7 @@ function OrdersPage() {
                 </TableCell>
 
                 <TableCell sx={{ minWidth: "80px" }}>
-                  {order.payment_status === 'success' && order.payment_type !== 'Wallet' && (
+                  {order.payment_status === 'success' && (
                     <IconButton
                       size="small"
                       color="warning"
