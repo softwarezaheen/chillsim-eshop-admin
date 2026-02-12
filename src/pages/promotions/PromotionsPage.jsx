@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Tabs, Tab, Box, Typography } from '@mui/material';
+import { Card, Button, Tabs, Tab, Box, Typography, Backdrop, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
 import PromotionCodesTab from './PromotionCodesTab';
 import PromotionUsagesTab from './PromotionUsagesTab';
@@ -7,6 +7,8 @@ import PromotionRulesTab from './PromotionRulesTab';
 import AddPromotionDialog from './AddPromotionDialog';
 import AddEditRuleDialog from './AddEditRuleDialog';
 import BulkGeneratePromoModal from '../../Components/Modals/BulkGeneratePromoModal';
+import BulkEditValidityModal from './BulkEditValidityModal';
+import EditPromotionModal from './EditPromotionModal';
 import {
   getPromotions,
   getPromotionUsages,
@@ -19,6 +21,9 @@ import {
   deletePromotionRule,
   expirePromotion,
   exportPromoCodesCsv,
+  bulkExpirePromotions,
+  bulkEditValidity,
+  editPromotion,
 } from '../../core/apis/promotionsAPI';
 
 const PromotionsPage = () => {
@@ -31,6 +36,13 @@ const PromotionsPage = () => {
   const [totalRows, setTotalRows] = useState(0);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [bulkGenerateOpen, setBulkGenerateOpen] = useState(false);
+  const [bulkEditValidityOpen, setBulkEditValidityOpen] = useState(false);
+  const [editPromotionOpen, setEditPromotionOpen] = useState(false);
+  const [selectedPromotion, setSelectedPromotion] = useState(null);
+  const [selectedPromotions, setSelectedPromotions] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [currentFilters, setCurrentFilters] = useState({});
+  const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
   const [formData, setFormData] = useState({
     rule_id: '',
     code: '',
@@ -47,7 +59,6 @@ const PromotionsPage = () => {
   const [ruleActions, setRuleActions] = useState([]);
   const [ruleEvents, setRuleEvents] = useState([]);
   const [promotionRules, setPromotionRules] = useState([]);
-  const [filters, setFilters] = useState([]);
   const [rules, setRules] = useState([]);
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
@@ -65,9 +76,9 @@ const PromotionsPage = () => {
     fetchPromotionRules();
   }, []);
 
-  const fetchPromotions = useCallback(async () => {
+  const fetchPromotionsWithFilters = useCallback(async (filters) => {
     setLoading(true);
-    // Convert date filters to UTC strings without timezone
+    setCurrentFilters(filters);
     const processedFilters = { ...filters };
     if (processedFilters.valid_from) {
       processedFilters.valid_from = new Date(processedFilters.valid_from).toISOString().split('T')[0];
@@ -82,44 +93,15 @@ const PromotionsPage = () => {
       processedFilters.created_to = new Date(processedFilters.created_to).toISOString();
     }
     
-    const { data, error, count, adjustedPage } = await getPromotions(processedFilters, page, pageSize);
+    const { data, error, count } = await getPromotions(processedFilters, page, pageSize);
     if (error) {
       toast.error('Failed to fetch promotions');
     } else {
       setPromotions(data || []);
       setTotalRows(count || 0);
-      // Update page if it was adjusted due to pagination overflow
-      if (adjustedPage !== undefined && adjustedPage !== page) {
-        setPage(adjustedPage);
-      }
     }
     setLoading(false);
-  }, [filters, page, pageSize]);
-
-  const fetchUsages = useCallback(async () => {
-    setLoading(true);
-    // Convert date filters to UTC strings without timezone
-    const processedFilters = { ...filters };
-    if (processedFilters.created_from) {
-      processedFilters.created_from = new Date(processedFilters.created_from).toISOString().split('T')[0];
-    }
-    if (processedFilters.created_to) {
-      processedFilters.created_to = new Date(processedFilters.created_to).toISOString().split('T')[0];
-    }
-    
-    const { data, error, count, adjustedPage } = await getPromotionUsages(processedFilters, page, pageSize);
-    if (error) {
-      toast.error('Failed to fetch promotion usages');
-    } else {
-      setUsages(data || []);
-      setTotalRows(count || 0);
-      // Update page if it was adjusted due to pagination overflow
-      if (adjustedPage !== undefined && adjustedPage !== page) {
-        setPage(adjustedPage);
-      }
-    }
-    setLoading(false);
-  }, [filters, page, pageSize]);
+  }, [page, pageSize]);
 
   const fetchRules = useCallback(async () => {
     setLoading(true);
@@ -133,14 +115,33 @@ const PromotionsPage = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 0) {
-      fetchPromotions();
-    } else if (activeTab === 1) {
-      fetchUsages();
+    if (activeTab === 1) {
+      const fetchData = async () => {
+        setLoading(true);
+        const { data, error, count } = await getPromotionUsages({}, page, pageSize);
+        if (error) {
+          toast.error('Failed to fetch promotion usages');
+        } else {
+          setUsages(data || []);
+          setTotalRows(count || 0);
+        }
+        setLoading(false);
+      };
+      fetchData();
     } else if (activeTab === 2) {
-      fetchRules();
+      const fetchData = async () => {
+        setLoading(true);
+        const { data, error } = await getPromotionRules();
+        if (error) {
+          toast.error('Failed to fetch promotion rules');
+        } else {
+          setRules(data || []);
+        }
+        setLoading(false);
+      };
+      fetchData();
     }
-  }, [activeTab, fetchPromotions, fetchUsages, fetchRules]);
+  }, [activeTab, page, pageSize]);
 
   const fetchRuleActions = async () => {
     const { data, error } = await getPromotionRuleActions();
@@ -197,7 +198,7 @@ const PromotionsPage = () => {
         valid_to: null,
         is_active: true,
       });
-      fetchPromotions();
+      fetchPromotionsWithFilters(currentFilters);
     }
   };
 
@@ -285,7 +286,6 @@ const PromotionsPage = () => {
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
     setPage(0);
-    setFilters({});
   };
 
   const handlePageChange = (event, newPage) => {
@@ -304,7 +304,7 @@ const PromotionsPage = () => {
         toast.error('Failed to expire promotion');
       } else {
         toast.success('Promotion expired successfully');
-        fetchPromotions();
+        fetchPromotionsWithFilters(currentFilters);
       }
     }
   };
@@ -315,12 +315,12 @@ const PromotionsPage = () => {
 
   const handleBulkGenerateSuccess = () => {
     toast.success('Promo codes generated successfully!');
-    fetchPromotions();
+    fetchPromotionsWithFilters(currentFilters);
   };
 
-  const handleExportCsv = async () => {
+  const handleExportCsv = async (filters) => {
+    setBulkOperationLoading(true);
     try {
-      // Process date filters same as fetchPromotions
       const processedFilters = { ...filters };
       if (processedFilters.valid_from) {
         processedFilters.valid_from = new Date(processedFilters.valid_from).toISOString();
@@ -339,7 +339,148 @@ const PromotionsPage = () => {
       toast.success('CSV exported successfully!');
     } catch (error) {
       toast.error(`Failed to export CSV: ${error.message}`);
+    } finally {
+      setBulkOperationLoading(false);
     }
+  };
+
+  const handleBulkExpire = async (filters) => {
+    if (selectedPromotions.length === 0 && !selectAll) {
+      toast.error('No promotions selected');
+      return;
+    }
+
+    const count = selectAll ? totalRows : selectedPromotions.length;
+    
+    if (!window.confirm(`Are you sure you want to expire ${count} promotion(s)?`)) {
+      return;
+    }
+
+    setBulkOperationLoading(true);
+    try {
+      let result;
+      if (selectAll) {
+        const processedFilters = { ...filters };
+        if (processedFilters.valid_from) {
+          processedFilters.valid_from = new Date(processedFilters.valid_from).toISOString().split('T')[0];
+        }
+        if (processedFilters.valid_to) {
+          processedFilters.valid_to = new Date(processedFilters.valid_to).toISOString().split('T')[0];
+        }
+        if (processedFilters.created_from) {
+          processedFilters.created_from = new Date(processedFilters.created_from).toISOString();
+        }
+        if (processedFilters.created_to) {
+          processedFilters.created_to = new Date(processedFilters.created_to).toISOString();
+        }
+        result = await bulkExpirePromotions(null, processedFilters);
+      } else {
+        result = await bulkExpirePromotions(selectedPromotions);
+      }
+      
+      toast.success(`Successfully expired ${result.data.expired_count} promotion(s)`);
+      setSelectedPromotions([]);
+      setSelectAll(false);
+      fetchPromotionsWithFilters(currentFilters);
+    } catch (error) {
+      toast.error(`Failed to expire promotions: ${error.message}`);
+    } finally {
+      setBulkOperationLoading(false);
+    }
+  };
+
+  const handleBulkEditValiditySubmit = async (validFrom, validTo, filters) => {
+    if (selectedPromotions.length === 0 && !selectAll) {
+      toast.error('No promotions selected');
+      return;
+    }
+
+    setBulkOperationLoading(true);
+    try {
+      let adjustedValidFrom = null;
+      let adjustedValidTo = null;
+      
+      if (validFrom) {
+        const fromDate = new Date(validFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        adjustedValidFrom = fromDate.toISOString();
+      }
+      
+      if (validTo) {
+        const toDate = new Date(validTo);
+        toDate.setHours(23, 59, 59, 999);
+        adjustedValidTo = toDate.toISOString();
+      }
+
+      let result;
+      if (selectAll) {
+        const filterRequest = {
+          filter_code: filters.code,
+          filter_is_active: filters.is_active,
+          filter_promo_type: filters.promo_type,
+        };
+        
+        if (filters.valid_from) {
+          filterRequest.filter_valid_from = new Date(filters.valid_from).toISOString().split('T')[0];
+        }
+        if (filters.valid_to) {
+          filterRequest.filter_valid_to = new Date(filters.valid_to).toISOString().split('T')[0];
+        }
+        if (filters.created_from) {
+          filterRequest.filter_created_from = new Date(filters.created_from).toISOString();
+        }
+        if (filters.created_to) {
+          filterRequest.filter_created_to = new Date(filters.created_to).toISOString();
+        }
+        
+        result = await bulkEditValidity(null, adjustedValidFrom, adjustedValidTo, filterRequest);
+      } else {
+        result = await bulkEditValidity(selectedPromotions, adjustedValidFrom, adjustedValidTo);
+      }
+      
+      toast.success(`Successfully updated ${result.data.updated_count} promotion(s)`);
+      setSelectedPromotions([]);
+      setSelectAll(false);
+      fetchPromotionsWithFilters(currentFilters);
+    } catch (error) {
+      toast.error(`Failed to update validity dates: ${error.message}`);
+    } finally {
+      setBulkOperationLoading(false);
+    }
+  };
+
+  const handleEditPromotionSubmit = async (updates) => {
+    if (!selectedPromotion) {
+      return;
+    }
+
+    try {
+      const adjustedUpdates = { ...updates };
+      
+      if (adjustedUpdates.valid_from) {
+        const fromDate = new Date(adjustedUpdates.valid_from);
+        fromDate.setHours(0, 0, 0, 0);
+        adjustedUpdates.valid_from = fromDate.toISOString();
+      }
+      
+      if (adjustedUpdates.valid_to) {
+        const toDate = new Date(adjustedUpdates.valid_to);
+        toDate.setHours(23, 59, 59, 999);
+        adjustedUpdates.valid_to = toDate.toISOString();
+      }
+
+      await editPromotion(selectedPromotion.id, adjustedUpdates);
+      toast.success('Promotion updated successfully');
+      setSelectedPromotion(null);
+      fetchPromotionsWithFilters(currentFilters);
+    } catch (error) {
+      toast.error(`Failed to update promotion: ${error.message}`);
+    }
+  };
+
+  const handleEditPromotion = (promotion) => {
+    setSelectedPromotion(promotion);
+    setEditPromotionOpen(true);
   };
 
   return (
@@ -363,16 +504,25 @@ const PromotionsPage = () => {
             page={page}
             pageSize={pageSize}
             totalRows={totalRows}
-            filters={filters}
-            setFilters={setFilters}
             setPage={setPage}
             setPageSize={setPageSize}
             handlePageChange={handlePageChange}
             handlePageSizeChange={handlePageSizeChange}
+            onFetchPromotions={fetchPromotionsWithFilters}
             onAddPromotion={() => setAddDialogOpen(true)}
             onExpirePromotion={handleExpirePromotion}
             onBulkGenerate={handleBulkGenerate}
             onExportCsv={handleExportCsv}
+            selectedPromotions={selectedPromotions}
+            setSelectedPromotions={setSelectedPromotions}
+            selectAll={selectAll}
+            setSelectAll={setSelectAll}
+            onBulkExpire={handleBulkExpire}
+            onBulkEditValidity={(filters) => {
+              setCurrentFilters(filters);
+              setBulkEditValidityOpen(true);
+            }}
+            onEditPromotion={handleEditPromotion}
           />
         )}
 
@@ -383,8 +533,6 @@ const PromotionsPage = () => {
             page={page}
             pageSize={pageSize}
             totalRows={totalRows}
-            filters={filters}
-            setFilters={setFilters}
             setPage={setPage}
             setPageSize={setPageSize}
             handlePageChange={handlePageChange}
@@ -428,6 +576,44 @@ const PromotionsPage = () => {
         onClose={() => setBulkGenerateOpen(false)}
         onSuccess={handleBulkGenerateSuccess}
       />
+
+      <BulkEditValidityModal
+        open={bulkEditValidityOpen}
+        onClose={() => setBulkEditValidityOpen(false)}
+        onSubmit={(validFrom, validTo) => handleBulkEditValiditySubmit(validFrom, validTo, currentFilters)}
+        selectedCount={selectAll ? totalRows : selectedPromotions.length}
+      />
+
+      <EditPromotionModal
+        open={editPromotionOpen}
+        onClose={() => {
+          setEditPromotionOpen(false);
+          setSelectedPromotion(null);
+        }}
+        onSubmit={handleEditPromotionSubmit}
+        promotion={selectedPromotion}
+      />
+
+      {/* Loading Overlay for Bulk Operations */}
+      <Backdrop
+        sx={{
+          color: '#fff',
+          zIndex: (theme) => theme.zIndex.modal + 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+        open={bulkOperationLoading}
+      >
+        <CircularProgress color="inherit" size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Processing bulk operation...
+        </Typography>
+        <Typography variant="body2" color="inherit">
+          This may take a moment for large datasets
+        </Typography>
+      </Backdrop>
     </Card>
   );
 };

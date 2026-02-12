@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -19,13 +19,13 @@ const PromotionUsagesTab = ({
   page,
   pageSize,
   totalRows,
-  filters,
-  setFilters,
   setPage,
   setPageSize,
   handlePageChange,
   handlePageSizeChange,
 }) => {
+  const [filters, setFilters] = useState({});
+  
   return (
     <>
       <Filters
@@ -162,6 +162,7 @@ const PromotionUsagesTab = ({
         onPageChange={handlePageChange}
         rowsPerPage={pageSize}
         onRowsPerPageChange={handlePageSizeChange}
+        rowsPerPageOptions={[10, 25, 50, 100]}
       />
     </>
   );

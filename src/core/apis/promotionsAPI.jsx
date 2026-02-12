@@ -1,15 +1,14 @@
 import { api } from "./apiInstance";
 import supabase from "./supabase";
 
-export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
-  // First get filtered count to check if we need to adjust page offset
+// Get filtered count for pagination adjustment
+const getFilteredCount = async (filters) => {
   let countQuery = supabase.from("promotion").select("*", { count: "exact", head: true });
   
-  // Apply the same filters to count query
   if (filters.code) {
     countQuery = countQuery.ilike("code", `%${filters.code}%`);
   }
-  if (filters.is_active !== undefined) {
+  if (filters.is_active !== undefined && filters.is_active !== "") {
     countQuery = countQuery.eq("is_active", filters.is_active);
   }
   if (filters.promo_type) {
@@ -27,8 +26,14 @@ export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
   if (filters.created_to) {
     countQuery = countQuery.lte("created_at", filters.created_to);
   }
+  
+  const { count } = await api(() => countQuery);
+  return count || 0;
+};
 
-  const { count: filteredCount } = await api(() => countQuery);
+export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
+  // First get filtered count to check if we need to adjust page offset
+  const filteredCount = await getFilteredCount(filters);
 
   // Adjust page if offset exceeds available filtered rows
   let adjustedPage = page;
@@ -54,7 +59,7 @@ export const getPromotions = async (filters = {}, page = 0, pageSize = 10) => {
   if (filters.code) {
     query = query.ilike("code", `%${filters.code}%`);
   }
-  if (filters.is_active !== undefined) {
+  if (filters.is_active !== undefined && filters.is_active !== "") {
     query = query.eq("is_active", filters.is_active);
   }
   if (filters.promo_type) {
@@ -307,4 +312,130 @@ export const exportPromoCodesCsv = async (filters = {}) => {
   link.click();
   link.remove();
   window.URL.revokeObjectURL(downloadUrl);
+};
+
+export const bulkExpirePromotions = async (promotionIds, filters = null) => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+  const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY;
+  
+  if (!ADMIN_API_KEY) {
+    throw new Error("Admin API key not configured. Please set VITE_ADMIN_API_KEY in .env");
+  }
+  
+  // If filters provided, use filters; otherwise use IDs
+  const requestBody = filters || { promotion_ids: promotionIds };
+  
+  const response = await fetch(`${API_URL}admin/promotions/bulk-expire`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": ADMIN_API_KEY,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.details || "Failed to expire promotions");
+  }
+
+  return await response.json();
+};
+
+export const bulkEditValidity = async (promotionIds, validFrom, validTo, filters = null) => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+  const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY;
+  
+  if (!ADMIN_API_KEY) {
+    throw new Error("Admin API key not configured. Please set VITE_ADMIN_API_KEY in .env");
+  }
+  
+  // If filters provided, use filters; otherwise use IDs
+  const requestBody = filters 
+    ? { ...filters, valid_from: validFrom, valid_to: validTo }
+    : { promotion_ids: promotionIds, valid_from: validFrom, valid_to: validTo };
+  
+  const response = await fetch(`${API_URL}admin/promotions/bulk-edit-validity`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": ADMIN_API_KEY,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.details || "Failed to edit validity dates");
+  }
+
+  return await response.json();
+};
+
+export const editPromotion = async (promotionId, updates) => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+  const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY;
+  
+  if (!ADMIN_API_KEY) {
+    throw new Error("Admin API key not configured. Please set VITE_ADMIN_API_KEY in .env");
+  }
+  
+  const response = await fetch(`${API_URL}admin/promotions/${promotionId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-Key": ADMIN_API_KEY,
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.details || "Failed to edit promotion");
+  }
+
+  return await response.json();
+};
+
+export const getPromotionsByIds = async (ids) => {
+  if (!ids || ids.length === 0) {
+    return { data: [], error: null };
+  }
+  
+  return await api(() => 
+    supabase
+      .from("promotion")
+      .select("*")
+      .in("id", ids)
+  );
+};
+
+export const getAllMatchingPromotions = async (filters = {}) => {
+  // Get IDs of ALL promotions matching the filters (for bulk operations)
+  let query = supabase.from("promotion").select("id");
+  
+  if (filters.code) {
+    query = query.ilike("code", `%${filters.code}%`);
+  }
+  if (filters.is_active !== undefined) {
+    query = query.eq("is_active", filters.is_active);
+  }
+  if (filters.promo_type) {
+    query = query.eq("type", filters.promo_type);
+  }
+  if (filters.valid_from) {
+    query = query.gte("valid_from", filters.valid_from);
+  }
+  if (filters.valid_to) {
+    query = query.lte("valid_to", filters.valid_to);
+  }
+  if (filters.created_from) {
+    query = query.gte("created_at", filters.created_from);
+  }
+  if (filters.created_to) {
+    query = query.lte("created_at", filters.created_to);
+  }
+  
+  const { data, error } = await api(() => query);
+  return { data: data?.map(p => p.id) || [], error };
 };
