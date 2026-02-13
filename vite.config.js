@@ -51,23 +51,11 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         // Limit concurrent file operations to prevent "too many open files" error on Windows
-        maxParallelFileOps: 20,
+        maxParallelFileOps: 10,
         output: {
-          manualChunks: (id) => {
-            // Bundle MUI icons into a single chunk to reduce file handle usage
-            if (id.includes('node_modules/@mui/icons-material')) {
-              return 'mui-icons';
-            }
-            // Bundle other vendor dependencies
-            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('node_modules/@mui/material')) {
-              return 'mui-material';
-            }
-            if (id.includes('node_modules')) {
-              return 'vendor';
-            }
+          manualChunks: {
+            // Keep react and react-dom together - they share internal state and must not be split
+            vendor: ["react", "react-dom", "axios", "formik"],
           },
         },
       },
@@ -75,7 +63,6 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       outDir: `build`,
       minify: "esbuild",
-      chunkSizeWarningLimit: 1000,
     },
     assetsInclude: ["**/*.xlsx"],
     define: {
