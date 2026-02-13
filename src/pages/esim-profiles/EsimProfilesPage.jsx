@@ -278,10 +278,11 @@ function EsimProfilesPage() {
             setTotalRows(0);
             setTotalPages(1);
           } else {
-            setTotalRows(res?.count || 0);
-            setTotalPages(res?.total_pages || 1);
-            setData(res?.data || []);
-            setStatistics(res?.statistics || {
+            const responseData = res?.data || res; // Handle both wrapped and unwrapped responses
+            setTotalRows(responseData?.total || res?.count || 0);
+            setTotalPages(responseData?.total_pages || 1);
+            setData(responseData?.profiles || res?.data || []);
+            setStatistics(responseData?.statistics || res?.statistics || {
               active_profiles: 0,
               pending_profiles: 0,
               expired_profiles: 0,
