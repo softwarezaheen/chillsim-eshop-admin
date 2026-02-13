@@ -27,15 +27,21 @@ esimProfilesAPI.interceptors.response.use(
  * @param {number} params.pageSize - Items per page
  * @param {string} [params.iccid] - Filter by ICCID (partial match)
  * @param {string} [params.user_id] - Filter by user_id
+ * @param {string} [params.user_email] - Filter by user email (partial match)
  * @param {string} [params.profile_status] - Filter by status (delivered/active/expired)
- * @returns {Promise<{data: Array, error: null, count: number, total_pages: number}>}
+ * @param {string} [params.created_from] - Filter by creation date from (ISO format)
+ * @param {string} [params.created_to] - Filter by creation date to (ISO format)
+ * @returns {Promise<{data: Array, error: null, count: number, total_pages: number, statistics: Object}>}
  */
 export const getEsimProfiles = async ({
   page = 1,
   pageSize = 20,
   iccid,
   user_id,
-  profile_status
+  user_email,
+  profile_status,
+  created_from,
+  created_to
 }) => {
   try {
     const params = new URLSearchParams();
@@ -43,7 +49,10 @@ export const getEsimProfiles = async ({
     params.append('page_size', pageSize);
     if (iccid) params.append('iccid', iccid);
     if (user_id) params.append('user_id', user_id);
+    if (user_email) params.append('user_email', user_email);
     if (profile_status) params.append('profile_status', profile_status);
+    if (created_from) params.append('created_from', created_from);
+    if (created_to) params.append('created_to', created_to);
 
     const response = await esimProfilesAPI.get(`/admin/esim-profiles?${params.toString()}`);
     
@@ -54,7 +63,8 @@ export const getEsimProfiles = async ({
       error: null,
       count: responseData.total || 0,
       page: responseData.page || 1,
-      total_pages: responseData.total_pages || 1
+      total_pages: responseData.total_pages || 1,
+      statistics: responseData.statistics || {}
     };
   } catch (error) {
     return {
@@ -62,7 +72,8 @@ export const getEsimProfiles = async ({
       error: error.response?.data?.error || error.message,
       count: 0,
       page: 1,
-      total_pages: 1
+      total_pages: 1,
+      statistics: {}
     };
   }
 };

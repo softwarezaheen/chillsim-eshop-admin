@@ -261,14 +261,30 @@ function EsimProfilesPage() {
 
     try {
       const { iccid, user_email, profile_status, created_from, created_to, page, pageSize } = searchQueries;
+      
+      // Convert date to ISO format for API
+      const convertToISO = (dateStr, isEndDate = false) => {
+        if (!dateStr) return undefined;
+        try {
+          const date = new Date(dateStr);
+          if (isEndDate) {
+            // Make end date inclusive by setting time to 23:59:59
+            date.setHours(23, 59, 59, 999);
+          }
+          return date.toISOString();
+        } catch {
+          return undefined;
+        }
+      };
+
       getEsimProfiles({
         page,
         pageSize,
         iccid: iccid || undefined,
         user_email: user_email || undefined,
         profile_status: profile_status || undefined,
-        created_from: created_from || undefined,
-        created_to: created_to || undefined,
+        created_from: convertToISO(created_from),
+        created_to: convertToISO(created_to, true),
       })
         .then((res) => {
           if (res?.error) {
@@ -278,11 +294,10 @@ function EsimProfilesPage() {
             setTotalRows(0);
             setTotalPages(1);
           } else {
-            const responseData = res?.data || res; // Handle both wrapped and unwrapped responses
-            setTotalRows(responseData?.total || res?.count || 0);
-            setTotalPages(responseData?.total_pages || 1);
-            setData(responseData?.profiles || res?.data || []);
-            setStatistics(responseData?.statistics || res?.statistics || {
+            setTotalRows(res?.count || 0);
+            setTotalPages(res?.total_pages || 1);
+            setData(res?.data || []);
+            setStatistics(res?.statistics || {
               active_profiles: 0,
               pending_profiles: 0,
               expired_profiles: 0,
@@ -416,7 +431,7 @@ function EsimProfilesPage() {
               </label>
               <TextField
                 id="created-from"
-                type="datetime-local"
+                type="date"
                 value={search.created_from}
                 onChange={(e) => setSearch({ ...search, created_from: e.target.value })}
                 InputLabelProps={{
@@ -433,7 +448,7 @@ function EsimProfilesPage() {
               </label>
               <TextField
                 id="created-to"
-                type="datetime-local"
+                type="date"
                 value={search.created_to}
                 onChange={(e) => setSearch({ ...search, created_to: e.target.value })}
                 InputLabelProps={{
