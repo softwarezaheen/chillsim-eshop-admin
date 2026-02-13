@@ -3,6 +3,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SyncIcon from "@mui/icons-material/Sync";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import {
   Card,
   FormControl,
@@ -33,6 +34,12 @@ import { getEsimProfiles, syncConsumption } from "../../core/apis/esimProfilesAP
 function EsimRow({ profile, onSync }) {
   const [expanded, setExpanded] = useState(false);
   const [syncing, setSyncing] = useState(false);
+
+  const handleCopyLPA = () => {
+    const lpaUri = `LPA:1$${profile.smdp_address}$${profile.activation_code}`;
+    navigator.clipboard.writeText(lpaUri);
+    toast.success('LPA URI copied to clipboard');
+  };
 
   const handleSync = async () => {
     setSyncing(true);
@@ -86,7 +93,16 @@ function EsimRow({ profile, onSync }) {
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
         </TableCell>
-        <TableCell>{profile.iccid}</TableCell>
+        <TableCell>
+          <Box>
+            <Typography variant="body2" fontWeight="bold">{profile.iccid}</Typography>
+            {profile.user_email && (
+              <Typography variant="caption" color="text.secondary">
+                {profile.user_email}
+              </Typography>
+            )}
+          </Box>
+        </TableCell>
         <TableCell>
           <Chip 
             label={profile.profile_status || 'delivered'} 
@@ -115,6 +131,23 @@ function EsimRow({ profile, onSync }) {
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={8}>
           <Collapse in={expanded} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 2 }}>
+              {/* LPA URI for troubleshooting */}
+              <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ flex: 1, mr: 2 }}>
+                  <Typography variant="caption" color="text.secondary" gutterBottom>
+                    LPA URI (for manual installation)
+                  </Typography>
+                  <Typography variant="body2" fontFamily="monospace" sx={{ wordBreak: 'break-all' }}>
+                    LPA:1${profile.smdp_address}${profile.activation_code}
+                  </Typography>
+                </Box>
+                <Tooltip title="Copy LPA URI">
+                  <IconButton onClick={handleCopyLPA} size="small" color="primary">
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
               <Typography variant="h6" gutterBottom component="div">
                 Bundles ({profile.bundles?.length || 0})
               </Typography>
@@ -122,12 +155,10 @@ function EsimRow({ profile, onSync }) {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Order ID</TableCell>
-                      <TableCell>Type</TableCell>
+                      <TableCell>Provider Order ID</TableCell>
+                      <TableCell>Bundle</TableCell>
                       <TableCell>Status</TableCell>
-                      <TableCell>Allocated</TableCell>
-                      <TableCell>Used</TableCell>
-                      <TableCell>Remaining</TableCell>
+                      <TableCell>Data Usage</TableCell>
                       <TableCell>Started At</TableCell>
                       <TableCell>Validity End</TableCell>
                     </TableRow>
@@ -138,7 +169,23 @@ function EsimRow({ profile, onSync }) {
                         <TableCell component="th" scope="row">
                           {bundle.esim_hub_order_id || 'N/A'}
                         </TableCell>
-                        <TableCell>{bundle.bundle_type}</TableCell>
+                        <TableCell>
+                          <Box>
+                            {bundle.bundle_name && (
+                              <Typography variant="body2" fontWeight="bold">
+                                {bundle.bundle_name}
+                              </Typography>
+                            )}
+                            {bundle.bundle_description && (
+                              <Typography variant="caption" color="text.secondary">
+                                {bundle.bundle_description}
+                              </Typography>
+                            )}
+                            {!bundle.bundle_name && !bundle.bundle_description && (
+                              <Typography variant="body2">{bundle.bundle_type}</Typography>
+                            )}
+                          </Box>
+                        </TableCell>
                         <TableCell>
                           <Chip 
                             label={bundle.bundle_status || 'pending'} 
@@ -146,9 +193,16 @@ function EsimRow({ profile, onSync }) {
                             size="small" 
                           />
                         </TableCell>
-                        <TableCell>{formatData(bundle.data_allocated_mb)}</TableCell>
-                        <TableCell>{formatData(bundle.data_used_mb)}</TableCell>
-                        <TableCell>{formatData(bundle.data_remaining_mb)}</TableCell>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="body2" fontWeight="bold">
+                              {formatData(bundle.data_used_mb)} / {formatData(bundle.data_allocated_mb)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {formatData(bundle.data_remaining_mb)} remaining
+                            </Typography>
+                          </Box>
+                        </TableCell>
                         <TableCell>{formatDate(bundle.started_at)}</TableCell>
                         <TableCell>{formatDate(bundle.validity_end_date)}</TableCell>
                       </TableRow>
@@ -172,12 +226,21 @@ function EsimProfilesPage() {
   const [loading, setLoading] = useState(false);
   const [searchQueries, setSearchQueries] = useState({
     iccid: "",
+    user_email: "",
     profile_status: "",
+    created_from: "",
+    created_to: "",
     page: 1,
     pageSize: 20,
   });
 
-  const [search, setSearch] = useState({ iccid: "", profile_status: "" });
+  const [search, setSearch] = useState({ 
+    iccid: "", 
+    user_email: "",
+    profile_status: "",
+    created_from: "",
+    created_to: ""
+  });
   const [totalRows, setTotalRows] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [data, setData] = useState([]);
@@ -186,12 +249,15 @@ function EsimProfilesPage() {
     setLoading(true);
 
     try {
-      const { iccid, profile_status, page, pageSize } = searchQueries;
+      const { iccid, user_email, profile_status, created_from, created_to, page, pageSize } = searchQueries;
       getEsimProfiles({
         page,
         pageSize,
         iccid: iccid || undefined,
+        user_email: user_email || undefined,
         profile_status: profile_status || undefined,
+        created_from: created_from || undefined,
+        created_to: created_to || undefined,
       })
         .then((res) => {
           if (res?.error) {
@@ -220,15 +286,18 @@ function EsimProfilesPage() {
   }, [getProfiles]);
 
   const resetFilters = () => {
-    setSearchQueries({ iccid: "", profile_status: "", page: 1, pageSize: 20 });
-    setSearch({ iccid: "", profile_status: "" });
+    setSearchQueries({ iccid: "", user_email: "", profile_status: "", created_from: "", created_to: "", page: 1, pageSize: 20 });
+    setSearch({ iccid: "", user_email: "", profile_status: "", created_from: "", created_to: "" });
   };
 
   const applyFilter = () => {
     setSearchQueries({
       ...searchQueries,
       iccid: search.iccid,
+      user_email: search.user_email,
       profile_status: search.profile_status,
+      created_from: search.created_from,
+      created_to: search.created_to,
       page: 1, // Reset to first page when filtering
     });
   };
@@ -261,7 +330,7 @@ function EsimProfilesPage() {
       <Filters
         onReset={resetFilters}
         onApply={applyFilter}
-        applyDisable={!search.iccid && !search.profile_status}
+        applyDisable={!search.iccid && !search.user_email && !search.profile_status && !search.created_from && !search.created_to}
       >
         <Grid container size={{ xs: 12 }} spacing={2}>
           <Grid item size={{ xs: 12, sm: 4 }}>
@@ -274,6 +343,23 @@ function EsimProfilesPage() {
                 value={search.iccid}
                 onChange={(e) => setSearch({ ...search, iccid: e.target.value })}
                 placeholder="Enter ICCID..."
+                InputProps={{
+                  startAdornment: <SearchIcon className="mr-2" />,
+                }}
+              />
+            </FormControl>
+          </Grid>
+
+          <Grid item size={{ xs: 12, sm: 4 }}>
+            <FormControl fullWidth>
+              <label className="mb-2" htmlFor="search-email">
+                User Email
+              </label>
+              <TextField
+                id="search-email"
+                value={search.user_email}
+                onChange={(e) => setSearch({ ...search, user_email: e.target.value })}
+                placeholder="Enter user email..."
                 InputProps={{
                   startAdornment: <SearchIcon className="mr-2" />,
                 }}
@@ -297,6 +383,40 @@ function EsimProfilesPage() {
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="expired">Expired</MenuItem>
               </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item size={{ xs: 12, sm: 6 }}>
+            <FormControl fullWidth>
+              <label className="mb-2" htmlFor="created-from">
+                Created From
+              </label>
+              <TextField
+                id="created-from"
+                type="datetime-local"
+                value={search.created_from}
+                onChange={(e) => setSearch({ ...search, created_from: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </FormControl>
+          </Grid>
+
+          <Grid item size={{ xs: 12, sm: 6 }}>
+            <FormControl fullWidth>
+              <label className="mb-2" htmlFor="created-to">
+                Created To
+              </label>
+              <TextField
+                id="created-to"
+                type="datetime-local"
+                value={search.created_to}
+                onChange={(e) => setSearch({ ...search, created_to: e.target.value })}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
             </FormControl>
           </Grid>
         </Grid>
