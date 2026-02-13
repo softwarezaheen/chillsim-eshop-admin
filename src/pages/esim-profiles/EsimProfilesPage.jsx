@@ -244,6 +244,17 @@ function EsimProfilesPage() {
   const [totalRows, setTotalRows] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [data, setData] = useState([]);
+  const [statistics, setStatistics] = useState({
+    active_profiles: 0,
+    pending_profiles: 0,
+    expired_profiles: 0,
+    total_data_allocated_mb: 0,
+    total_data_used_mb: 0,
+    unlimited_bundles_count: 0,
+    avg_usage_percentage: 0,
+    early_expiration_count: 0,
+    no_activation_count: 0
+  });
 
   const getProfiles = useCallback(() => {
     setLoading(true);
@@ -270,6 +281,17 @@ function EsimProfilesPage() {
             setTotalRows(res?.count || 0);
             setTotalPages(res?.total_pages || 1);
             setData(res?.data || []);
+            setStatistics(res?.statistics || {
+              active_profiles: 0,
+              pending_profiles: 0,
+              expired_profiles: 0,
+              total_data_allocated_mb: 0,
+              total_data_used_mb: 0,
+              unlimited_bundles_count: 0,
+              avg_usage_percentage: 0,
+              early_expiration_count: 0,
+              no_activation_count: 0
+            });
           }
         })
         .finally(() => {
@@ -421,6 +443,112 @@ function EsimProfilesPage() {
           </Grid>
         </Grid>
       </Filters>
+
+      {/* Statistics Cards */}
+      <Box sx={{ px: 2, py: 2 }}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Active</Typography>
+                  <Typography variant="h5" fontWeight="bold">{statistics.active_profiles}</Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>of {totalRows}</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'success.main', p: 1.5, borderRadius: 1 }}>
+                  <Typography variant="h6">📱</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Allocated</Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    {(statistics.total_data_allocated_mb / 1000).toFixed(1)} GB
+                    {statistics.unlimited_bundles_count > 0 && ` ∞ (${statistics.unlimited_bundles_count})`}
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>All bundles</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'info.main', p: 1.5, borderRadius: 1 }}>
+                  <Typography variant="h6">💾</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Consumed</Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    {(statistics.total_data_used_mb / 1000).toFixed(1)} GB
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>All bundles</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'secondary.main', p: 1.5, borderRadius: 1 }}>
+                  <Typography variant="h6">📊</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Avg. Usage</Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    {statistics.avg_usage_percentage.toFixed(1)}%
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Activated</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'warning.main', p: 1.5, borderRadius: 1 }}>
+                  <Typography variant="h6">📈</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Early Exp.</Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    {statistics.early_expiration_count}
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Before full</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'error.main', p: 1.5, borderRadius: 1 }}>
+                  <Typography variant="h6">⏱️</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
+            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>No Activation</Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    {statistics.no_activation_count}
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Never used</Typography>
+                </Box>
+                <Box sx={{ bgcolor: 'grey.700', p: 1.5, borderRadius: 1 }}>
+                  <Typography variant="h6">❌</Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
 
       <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6">eSIM Profiles ({totalRows})</Typography>
