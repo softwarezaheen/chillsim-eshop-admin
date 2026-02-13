@@ -9,6 +9,7 @@ lerna-debug.log*
 
 .env
 
+build
 dist-qa
 node_modules
 dist

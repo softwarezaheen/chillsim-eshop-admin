@@ -28,7 +28,6 @@ import Grid from "@mui/material/Grid2";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import Filters from "../../Components/Filters/Filters";
-import TableComponent from "../../Components/shared/table-component/TableComponent";
 import { getEsimProfiles, syncConsumption } from "../../core/apis/esimProfilesAPI";
 
 function EsimRow({ profile, onSync }) {
