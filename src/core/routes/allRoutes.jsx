@@ -8,6 +8,7 @@ import DevicesPage from "../../pages/devices/DevicesPage";
 import OrdersPage from "../../pages/orders/OrdersPage";
 import UserDetail from "../../pages/users/UserDetail";
 import UsersPage from "../../pages/users/UsersPage";
+import EsimProfilesPage from "../../pages/esim-profiles/EsimProfilesPage";
 import RouteWrapper from "./RouteWrapper";
 import ChangePasswordPage from "../../pages/authentication/ChangePasswordPage";
 import VouchersList from "../../pages/vouchers/VouchersList";
@@ -81,6 +82,13 @@ export const privateRoutes = [
         key: "/users/:id",
         name: "User Detail",
         regex: "^/users/([0-9a-fA-F-]+)$",
+      },
+      {
+        path: "/esim-profiles",
+        element: <EsimProfilesPage />,
+        key: "/esim-profiles",
+        name: "eSIM Profiles",
+        regex: "^/esim-profiles/?$",
       },
       {
         path: "/contact-us",
