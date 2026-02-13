@@ -446,103 +446,91 @@ function EsimProfilesPage() {
 
       {/* Statistics Cards */}
       <Box sx={{ px: 2, py: 2 }}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Active</Typography>
-                  <Typography variant="h5" fontWeight="bold">{statistics.active_profiles}</Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>of {totalRows}</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'success.main', p: 1.5, borderRadius: 1 }}>
-                  <Typography variant="h6">📱</Typography>
+        <Grid container spacing={1.5}>
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <Card sx={{ p: 1.5, bgcolor: '#e8f5e9' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5">📱</Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Active</Typography>
+                  <Typography variant="h6" fontWeight="bold">{statistics.active_profiles}</Typography>
+                  <Typography variant="caption" color="text.secondary">of {totalRows}</Typography>
                 </Box>
               </Box>
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Allocated</Typography>
-                  <Typography variant="h5" fontWeight="bold">
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <Card sx={{ p: 1.5, bgcolor: '#e3f2fd' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5">💾</Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Allocated</Typography>
+                  <Typography variant="h6" fontWeight="bold">
                     {(statistics.total_data_allocated_mb / 1000).toFixed(1)} GB
                     {statistics.unlimited_bundles_count > 0 && ` ∞ (${statistics.unlimited_bundles_count})`}
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>All bundles</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'info.main', p: 1.5, borderRadius: 1 }}>
-                  <Typography variant="h6">💾</Typography>
+                  <Typography variant="caption" color="text.secondary">All bundles</Typography>
                 </Box>
               </Box>
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Consumed</Typography>
-                  <Typography variant="h5" fontWeight="bold">
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <Card sx={{ p: 1.5, bgcolor: '#fce4ec' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5">📊</Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Consumed</Typography>
+                  <Typography variant="h6" fontWeight="bold">
                     {(statistics.total_data_used_mb / 1000).toFixed(1)} GB
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>All bundles</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'secondary.main', p: 1.5, borderRadius: 1 }}>
-                  <Typography variant="h6">📊</Typography>
+                  <Typography variant="caption" color="text.secondary">All bundles</Typography>
                 </Box>
               </Box>
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Avg. Usage</Typography>
-                  <Typography variant="h5" fontWeight="bold">
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <Card sx={{ p: 1.5, bgcolor: '#fff3e0' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5">📈</Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Avg. Usage</Typography>
+                  <Typography variant="h6" fontWeight="bold">
                     {statistics.avg_usage_percentage.toFixed(1)}%
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Activated</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'warning.main', p: 1.5, borderRadius: 1 }}>
-                  <Typography variant="h6">📈</Typography>
+                  <Typography variant="caption" color="text.secondary">Activated</Typography>
                 </Box>
               </Box>
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Early Exp.</Typography>
-                  <Typography variant="h5" fontWeight="bold">
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <Card sx={{ p: 1.5, bgcolor: '#ffebee' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5">⏱️</Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">Early Exp.</Typography>
+                  <Typography variant="h6" fontWeight="bold">
                     {statistics.early_expiration_count}
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Before full</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'error.main', p: 1.5, borderRadius: 1 }}>
-                  <Typography variant="h6">⏱️</Typography>
+                  <Typography variant="caption" color="text.secondary">Before full</Typography>
                 </Box>
               </Box>
             </Card>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6, md: 2.4 }}>
-            <Card sx={{ p: 2, bgcolor: '#1a1a2e', color: 'white' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>No Activation</Typography>
-                  <Typography variant="h5" fontWeight="bold">
+          <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+            <Card sx={{ p: 1.5, bgcolor: '#f5f5f5' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="h5">❌</Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" color="text.secondary">No Activation</Typography>
+                  <Typography variant="h6" fontWeight="bold">
                     {statistics.no_activation_count}
                   </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.7 }}>Never used</Typography>
-                </Box>
-                <Box sx={{ bgcolor: 'grey.700', p: 1.5, borderRadius: 1 }}>
-                  <Typography variant="h6">❌</Typography>
+                  <Typography variant="caption" color="text.secondary">Never used</Typography>
                 </Box>
               </Box>
             </Card>
