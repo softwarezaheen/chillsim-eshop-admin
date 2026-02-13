@@ -4,6 +4,8 @@ import SyncIcon from "@mui/icons-material/Sync";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CloudSyncIcon from "@mui/icons-material/CloudSync";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
   Card,
   FormControl,
@@ -24,12 +26,18 @@ import {
   TableHead,
   TableRow,
   TablePagination,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import Filters from "../../Components/Filters/Filters";
-import { getEsimProfiles, syncConsumption } from "../../core/apis/esimProfilesAPI";
+import { getEsimProfiles, syncConsumption, syncAllConsumption } from "../../core/apis/esimProfilesAPI";
 
 function EsimRow({ profile, onSync }) {
   const [expanded, setExpanded] = useState(false);
@@ -255,6 +263,11 @@ function EsimProfilesPage() {
     early_expiration_count: 0,
     no_activation_count: 0
   });
+  
+  // Bulk sync state
+  const [bulkSyncDialog, setBulkSyncDialog] = useState(false);
+  const [bulkSyncConfirm, setBulkSyncConfirm] = useState(false);
+  const [bulkSyncing, setBulkSyncing] = useState(false);
 
   const getProfiles = useCallback(() => {
     setLoading(true);
@@ -350,6 +363,75 @@ function EsimProfilesPage() {
       pageSize: parseInt(event.target.value, 10),
       page: 1,
     });
+  };
+
+  const handleBulkSyncClick = () => {
+    setBulkSyncDialog(true);
+    setBulkSyncConfirm(false);
+  };
+
+  const handleBulkSyncConfirm = async () => {
+    if (!bulkSyncConfirm) {
+      setBulkSyncConfirm(true);
+      return;
+    }
+
+    // Second confirmation - proceed with sync
+    setBulkSyncing(true);
+    setBulkSyncDialog(false);
+
+    const { iccid, user_email, profile_status, created_from, created_to } = searchQueries;
+    
+    // Convert date to ISO format like in getProfiles
+    const convertToISO = (dateStr, isEndDate = false) => {
+      if (!dateStr) return undefined;
+      try {
+        const date = new Date(dateStr);
+        if (isEndDate) {
+          date.setHours(23, 59, 59, 999);
+        }
+        return date.toISOString();
+      } catch {
+        return undefined;
+      }
+    };
+
+    try {
+      const result = await syncAllConsumption({
+        iccid: iccid || undefined,
+        user_email: user_email || undefined,
+        profile_status: profile_status || undefined,
+        created_from: convertToISO(created_from),
+        created_to: convertToISO(created_to, true),
+      });
+
+      if (result.success) {
+        const data = result.data;
+        toast.success(
+          `Bulk sync complete! ✅ ${data.synced} synced, ❌ ${data.failed} failed (${data.total_profiles} total)`, 
+          { autoClose: 8000 }
+        );
+        
+        if (data.errors && data.errors.length > 0) {
+          console.error('Bulk sync errors:', data.errors);
+        }
+        
+        // Refresh the list
+        getProfiles();
+      } else {
+        toast.error(`Bulk sync failed: ${result.error}`);
+      }
+    } catch (e) {
+      toast.error(e?.message || "Bulk sync failed");
+    } finally {
+      setBulkSyncing(false);
+      setBulkSyncConfirm(false);
+    }
+  };
+
+  const handleBulkSyncCancel = () => {
+    setBulkSyncDialog(false);
+    setBulkSyncConfirm(false);
   };
 
   const tableHeaders = [
@@ -483,7 +565,7 @@ function EsimProfilesPage() {
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" color="text.secondary">Allocated</Typography>
                   <Typography variant="h6" fontWeight="bold">
-                    {(statistics.total_data_allocated_mb / 1000).toFixed(1)} GB
+                    {((statistics.total_data_allocated_mb || 0) / 1000).toFixed(1)} GB
                     {statistics.unlimited_bundles_count > 0 && ` ∞ (${statistics.unlimited_bundles_count})`}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">All bundles</Typography>
@@ -499,7 +581,7 @@ function EsimProfilesPage() {
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" color="text.secondary">Consumed</Typography>
                   <Typography variant="h6" fontWeight="bold">
-                    {(statistics.total_data_used_mb / 1000).toFixed(1)} GB
+                    {((statistics.total_data_used_mb || 0) / 1000).toFixed(1)} GB
                   </Typography>
                   <Typography variant="caption" color="text.secondary">All bundles</Typography>
                 </Box>
@@ -514,7 +596,7 @@ function EsimProfilesPage() {
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="caption" color="text.secondary">Avg. Usage</Typography>
                   <Typography variant="h6" fontWeight="bold">
-                    {statistics.avg_usage_percentage.toFixed(1)}%
+                    {(statistics.avg_usage_percentage || 0).toFixed(1)}%
                   </Typography>
                   <Typography variant="caption" color="text.secondary">Activated</Typography>
                 </Box>
@@ -556,11 +638,25 @@ function EsimProfilesPage() {
 
       <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6">eSIM Profiles ({totalRows})</Typography>
-        <Tooltip title="Refresh">
-          <IconButton onClick={getProfiles} disabled={loading}>
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="Bulk Sync All Filtered Profiles">
+            <Button
+              variant="outlined"
+              color="warning"
+              size="small"
+              startIcon={bulkSyncing ? <CircularProgress size={16} /> : <CloudSyncIcon />}
+              onClick={handleBulkSyncClick}
+              disabled={loading || bulkSyncing || totalRows === 0}
+            >
+              Sync All ({totalRows})
+            </Button>
+          </Tooltip>
+          <Tooltip title="Refresh">
+            <IconButton onClick={getProfiles} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {loading ? (
@@ -609,6 +705,76 @@ function EsimProfilesPage() {
           />
         </>
       )}
+
+      {/* Bulk Sync Confirmation Dialog */}
+      <Dialog
+        open={bulkSyncDialog}
+        onClose={handleBulkSyncCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <WarningAmberIcon color="warning" />
+          {bulkSyncConfirm ? 'Final Confirmation Required' : 'Bulk Sync Warning'}
+        </DialogTitle>
+        <DialogContent>
+          {!bulkSyncConfirm ? (
+            <>
+              <DialogContentText>
+                <strong>⚠️ WARNING: Long-Running Operation</strong>
+              </DialogContentText>
+              <DialogContentText sx={{ mt: 2 }}>
+                You are about to sync consumption data for <strong>{totalRows} eSIM profiles</strong>.
+              </DialogContentText>
+              <DialogContentText sx={{ mt: 1 }}>
+                This operation will:
+              </DialogContentText>
+              <Box component="ul" sx={{ mt: 1, pl: 2 }}>
+                <Typography component="li" variant="body2">
+                  Take approximately <strong>{Math.ceil(totalRows * 0.2 / 60)} minutes</strong> to complete
+                </Typography>
+                <Typography component="li" variant="body2">
+                  Call eSIM Hub API {totalRows} times (one per profile)
+                </Typography>
+                <Typography component="li" variant="body2">
+                  May impact system responsiveness during execution
+                </Typography>
+                <Typography component="li" variant="body2">
+                  Cannot be cancelled once started
+                </Typography>
+              </Box>
+              <DialogContentText sx={{ mt: 2, color: 'warning.main', fontWeight: 'bold' }}>
+                Are you sure you want to proceed?
+              </DialogContentText>
+            </>
+          ) : (
+            <>
+              <DialogContentText>
+                <strong>🚨 FINAL CONFIRMATION</strong>
+              </DialogContentText>
+              <DialogContentText sx={{ mt: 2 }}>
+                This is your last chance to cancel. The bulk sync operation will start immediately after clicking &quot;Yes, Start Sync&quot;.
+              </DialogContentText>
+              <DialogContentText sx={{ mt: 2, color: 'error.main', fontWeight: 'bold' }}>
+                Do you really want to sync {totalRows} profiles?
+              </DialogContentText>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleBulkSyncCancel} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleBulkSyncConfirm}
+            color={bulkSyncConfirm ? 'error' : 'warning'}
+            variant="contained"
+            autoFocus
+          >
+            {bulkSyncConfirm ? 'Yes, Start Sync' : 'I Understand, Continue'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }

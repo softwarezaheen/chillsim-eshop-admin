@@ -104,4 +104,44 @@ export const syncConsumption = async (iccid) => {
   }
 };
 
+/**
+ * Bulk sync consumption data for all filtered eSIM profiles
+ * WARNING: This is a long-running operation!
+ * @param {Object} filters - Filter parameters (same as getEsimProfiles)
+ * @param {string} [filters.iccid] - Filter by ICCID
+ * @param {string} [filters.user_id] - Filter by user_id
+ * @param {string} [filters.user_email] - Filter by user email
+ * @param {string} [filters.profile_status] - Filter by status
+ * @param {string} [filters.created_from] - Filter by creation date from (ISO)
+ * @param {string} [filters.created_to] - Filter by creation date to (ISO)
+ * @returns {Promise<{success: boolean, data: object, error: null|string}>}
+ */
+export const syncAllConsumption = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (filters.iccid) params.append('iccid', filters.iccid);
+    if (filters.user_id) params.append('user_id', filters.user_id);
+    if (filters.user_email) params.append('user_email', filters.user_email);
+    if (filters.profile_status) params.append('profile_status', filters.profile_status);
+    if (filters.created_from) params.append('created_from', filters.created_from);
+    if (filters.created_to) params.append('created_to', filters.created_to);
+
+    const response = await esimProfilesAPI.post(`/admin/consumption/sync-all?${params.toString()}`);
+    return {
+      success: true,
+      data: response.data.data || {},
+      error: null
+    };
+  } catch (error) {
+    const errorData = error.response?.data;
+    const errorMessage = errorData?.error || errorData?.message || error.message;
+    
+    return {
+      success: false,
+      data: {},
+      error: errorMessage
+    };
+  }
+};
+
 export default esimProfilesAPI;
