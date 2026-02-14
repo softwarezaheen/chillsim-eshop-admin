@@ -479,3 +479,31 @@ export const syncBundlesNow = async () => {
 
   return await response.json();
 };
+
+/**
+ * Refresh tag data from eSIM Hub
+ * Updates tag.data and tag_translation.data with fresh country_code, iso3_code, zone_name values
+ * @returns {Promise<Object>} Refresh result
+ */
+export const refreshTagData = async () => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+  const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY;
+
+  if (!ADMIN_API_KEY) {
+    throw new Error("Admin API key not configured. Please set VITE_ADMIN_API_KEY in .env");
+  }
+
+  const response = await fetch(`${API_URL}admin/tags/refresh-data`, {
+    method: "POST",
+    headers: {
+      "X-Admin-Key": ADMIN_API_KEY,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.details || "Failed to refresh tag data");
+  }
+
+  return await response.json();
+};

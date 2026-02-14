@@ -41,7 +41,8 @@ import {
   importBundlePrices,
   bulkUpdateBundles,
   rebuildBundleCache,
-  syncBundlesNow
+  syncBundlesNow,
+  refreshTagData
 } from "../../core/apis/bundlesAPI";
 import { COUNTRIES } from "../../data/countries";
 
@@ -60,6 +61,7 @@ const BundleList = () => {
   const [exporting, setExporting] = useState(false);
   const [rebuildingCache, setRebuildingCache] = useState(false);
   const [syncingBundles, setSyncingBundles] = useState(false);
+  const [refreshingTags, setRefreshingTags] = useState(false);
   const [syncConfirmDialog, setSyncConfirmDialog] = useState(false);
   
   // Selection state
@@ -294,6 +296,24 @@ const BundleList = () => {
       toast.error(e?.message || 'Failed to rebuild cache');
     } finally {
       setRebuildingCache(false);
+    }
+  };
+
+  // Handle tag data refresh
+  const handleRefreshTagData = async () => {
+    if (!window.confirm('Refresh tag data from eSIM Hub? This will fix stale country codes and zone names in tag.data and tag_translation.data.')) {
+      return;
+    }
+    
+    setRefreshingTags(true);
+    try {
+      const result = await refreshTagData();
+      toast.success(`Tag data refreshed: ${result?.data?.countries_updated || 0} countries, ${result?.data?.regions_updated || 0} regions, ${result?.data?.translations_updated || 0} translations updated`);
+      getBundles(); // Refresh data
+    } catch (e) {
+      toast.error(e?.message || 'Failed to refresh tag data');
+    } finally {
+      setRefreshingTags(false);
     }
   };
 
@@ -634,6 +654,18 @@ const BundleList = () => {
             disabled={rebuildingCache}
           >
             {rebuildingCache ? "Rebuilding..." : "Rebuild Cache"}
+          </Button>
+        </Tooltip>
+        <Tooltip title="Refresh tag data to fix stale country codes from eSIM Hub">
+          <Button
+            variant="contained"
+            size="small"
+            color="success"
+            startIcon={<Refresh />}
+            onClick={handleRefreshTagData}
+            disabled={refreshingTags}
+          >
+            {refreshingTags ? "Refreshing..." : "Refresh Tag Data"}
           </Button>
         </Tooltip>
         <Tooltip title="Trigger bundle sync from eSIM Hub (runs daily at 3 AM automatically)">
