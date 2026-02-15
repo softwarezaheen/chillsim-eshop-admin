@@ -1,6 +1,7 @@
 //UTILITIES
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import CountUp from "react-countup";
 import { toast } from "react-toastify";
 //COMPONENT
@@ -37,7 +38,7 @@ import RowComponent from "../../Components/shared/table-component/RowComponent";
 import TableComponent from "../../Components/shared/table-component/TableComponent";
 import TagComponent from "../../Components/shared/tag-component/TagComponent";
 import CustomDatePicker from "../../Components/CustomDatePicker";
-import { getAllOrders, refundOrder, getOrderStatistics } from "../../core/apis/ordersAPI";
+import { getAllOrders, refundOrder, getOrderStatistics, getOrderIccid } from "../../core/apis/ordersAPI";
 
 function OrdersPage() {
   const [loading, setLoading] = useState(null);
@@ -45,6 +46,7 @@ function OrdersPage() {
   const [totalRows, setTotalRows] = useState(0);
   const [data, setData] = useState([]);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [orderIccidCache, setOrderIccidCache] = useState({}); // { orderId: iccid|null }
   const [refundDialog, setRefundDialog] = useState({ open: false, order: null });
   const [refundLoading, setRefundLoading] = useState(false);
   const [refundResultDialog, setRefundResultDialog] = useState({ 
@@ -767,7 +769,16 @@ function OrdersPage() {
                 <TableCell sx={{ width: '40px', padding: '8px' }}>
                   <IconButton
                     size="small"
-                    onClick={() => setExpandedRow(isExpanded ? null : order.id)}
+                    onClick={() => {
+                      const newExpanded = isExpanded ? null : order.id;
+                      setExpandedRow(newExpanded);
+                      // Lazy-load ICCID when expanding a row
+                      if (newExpanded && !(order.id in orderIccidCache)) {
+                        getOrderIccid(order.id).then((result) => {
+                          setOrderIccidCache((prev) => ({ ...prev, [order.id]: result.iccid }));
+                        });
+                      }
+                    }}
                   >
                     {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                   </IconButton>
@@ -946,7 +957,18 @@ function OrdersPage() {
                             👤 User Information
                           </Typography>
                           <Box sx={{ pl: 2 }}>
-                            <DetailRow label="User ID" value={order.user_id || "Deleted User"} />
+                            <DetailRow label="User ID" value={
+                              order.user_id ? (
+                                <RouterLink
+                                  to={`/users/${order.user_id}`}
+                                  style={{ color: '#1976d2', textDecoration: 'none' }}
+                                  onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                  onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                >
+                                  {order.user_id}
+                                </RouterLink>
+                              ) : "Deleted User"
+                            } />
                             <DetailRow label="Email" value={order.user_email || "N/A"} />
                             <DetailRow label="Phone" value={order.user?.metadata?.msisdn || "N/A"} />
                             {order.anonymous_user_id && order.anonymous_user_id !== order.user_id && (
@@ -964,10 +986,19 @@ function OrdersPage() {
                             <DetailRow label="Bundle ID" value={order.bundle_id} />
                             <DetailRow label="Bundle Name" value={bundleInfo.name} />
                             {bundleInfo.subtitle && (
-                              <DetailRow label="Bundle Subtitle" value={bundleInfo.subtitle} />
+                              <DetailRow label="Bundle Description" value={bundleInfo.subtitle} />
                             )}
-                            {order.searched_countries && (
-                              <DetailRow label="Searched Countries" value={order.searched_countries} />
+                            {orderIccidCache[order.id] && (
+                              <DetailRow label="ICCID" value={
+                                <RouterLink
+                                  to={`/esim-profiles?iccid=${orderIccidCache[order.id]}`}
+                                  style={{ color: '#1976d2', textDecoration: 'none', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                                  onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                  onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                >
+                                  {orderIccidCache[order.id]}
+                                </RouterLink>
+                              } />
                             )}
                             <DetailRow label="Promo Code" value={order.promo_code || "N/A"} />
                             <DetailRow label="Referral Code" value={order.referral_code || "N/A"} />

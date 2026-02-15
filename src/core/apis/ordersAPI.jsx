@@ -477,3 +477,26 @@ export const refundOrder = async ({ orderId, paymentIntentId = null, amount = nu
     };
   }
 };
+
+/**
+ * Get ICCID for an order by looking up user_profile
+ * @param {string} orderId - The order ID
+ * @returns {Promise<{iccid: string|null, error: string|null}>}
+ */
+export const getOrderIccid = async (orderId) => {
+  try {
+    const { data, error } = await supabase
+      .from("user_profile")
+      .select("iccid")
+      .eq("user_order_id", orderId)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      return { iccid: null, error: error.message };
+    }
+    return { iccid: data?.iccid || null, error: null };
+  } catch (e) {
+    return { iccid: null, error: e.message };
+  }
+};
