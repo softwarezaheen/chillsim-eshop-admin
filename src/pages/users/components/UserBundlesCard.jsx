@@ -19,7 +19,9 @@ import {
   Checkbox,
   FormControlLabel,
   TablePagination,
+  IconButton,
 } from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
@@ -272,15 +274,23 @@ export default function UserBundlesCard({ userId, onBundleClick }) {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
-          component="div"
-          count={totalCount}
-          rowsPerPage={pageSize}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 1 }}>
+          <Tooltip title="Refresh bundles">
+            <IconButton onClick={fetchData} disabled={loading} size="small" color="primary">
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            component="div"
+            count={totalCount}
+            rowsPerPage={pageSize}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            sx={{ flex: 1 }}
+          />
+        </Box>
       </CardContent>
     </Card>
   );

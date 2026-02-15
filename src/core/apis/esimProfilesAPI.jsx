@@ -81,14 +81,18 @@ export const getEsimProfiles = async ({
 /**
  * Manually trigger consumption data sync for a specific eSIM profile
  * @param {string} iccid - eSIM ICCID
- * @returns {Promise<{success: boolean, message: string, error: null|string}>}
+ * @returns {Promise<{success: boolean, message: string, profile: object|null, bundles: array, error: null|string}>}
  */
 export const syncConsumption = async (iccid) => {
   try {
     const response = await esimProfilesAPI.post(`/admin/consumption/sync/${iccid}`);
+    const data = response.data.data;
+    
     return {
       success: true,
-      message: response.data.data?.message || 'Consumption sync completed',
+      message: data?.message || 'Consumption sync completed',
+      profile: data?.profile || null,
+      bundles: data?.bundles || [],
       error: null
     };
   } catch (error) {
@@ -99,6 +103,8 @@ export const syncConsumption = async (iccid) => {
     return {
       success: false,
       message: '',
+      profile: null,
+      bundles: [],
       error: errorMessage
     };
   }

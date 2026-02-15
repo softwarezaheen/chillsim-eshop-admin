@@ -108,8 +108,12 @@ const UserDetail = () => {
         profile={selectedProfile}
         onClose={() => setSelectedProfile(null)}
         onRefresh={() => {
+          // Refresh the card in background
           setEsimRefreshKey((prev) => prev + 1);
-          setSelectedProfile(null);
+        }}
+        onProfileUpdate={(updatedProfile) => {
+          // Update modal data in-place without closing
+          setSelectedProfile(updatedProfile);
         }}
       />
       <BundleDetailModal

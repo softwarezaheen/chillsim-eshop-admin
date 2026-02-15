@@ -18,6 +18,7 @@ import { Close as CloseIcon, QrCode as QrIcon, Refresh as RefreshIcon } from "@m
 import { useState } from "react";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
+import { syncConsumption } from "../../../core/apis/esimProfilesAPI";
 
 const DetailRow = ({ label, value }) => (
   <Box sx={{ display: "flex", py: 0.5 }}>
@@ -36,7 +37,7 @@ const statusColorMap = {
   expired: "error",
 };
 
-export default function EsimProfileDetailModal({ open, profile, onClose, onRefresh }) {
+export default function EsimProfileDetailModal({ open, profile, onClose, onRefresh, onProfileUpdate }) {
   const [refreshing, setRefreshing] = useState(false);
 
   if (!profile) return null;
@@ -46,24 +47,26 @@ export default function EsimProfileDetailModal({ open, profile, onClose, onRefre
   const handleRefreshConsumption = async () => {
     setRefreshing(true);
     try {
-      // Call the refresh API (ICCID is available in profile)
-      const response = await fetch(`${import.meta.env.VITE_API_SERVER_URL}/api/v1/admin/consumption/sync/${profile.iccid}`, {
-        method: 'POST',
-        headers: {
-          'X-Admin-Key': localStorage.getItem('admin_key'),
-        },
-      });
+      const result = await syncConsumption(profile.iccid);
       
-      const result = await response.json();
-      
-      if (response.ok) {
-        toast.success('Consumption data refreshed successfully');
-        // Trigger parent refresh if callback provided
+      if (result.success) {
+        toast.success(result.message || 'Consumption data refreshed successfully');
+        
+        // Update profile data in-place if new data is available
+        if (result.profile && result.bundles && onProfileUpdate) {
+          const updatedProfile = {
+            ...result.profile,
+            bundles: result.bundles
+          };
+          onProfileUpdate(updatedProfile);
+        }
+        
+        // Trigger parent card refresh in background
         if (onRefresh) {
           onRefresh();
         }
       } else {
-        toast.error(result.message || 'Failed to refresh consumption data');
+        toast.error(result.error || 'Failed to refresh consumption data');
       }
     } catch (error) {
       toast.error('Failed to refresh consumption data');
