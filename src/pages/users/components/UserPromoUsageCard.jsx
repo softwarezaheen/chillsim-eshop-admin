@@ -59,7 +59,7 @@ export default function UserPromoUsageCard({ userId }) {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   return (
-    <Card>
+    <Card sx={{ height: "100%" }}>
       <CardHeader
         title={
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>

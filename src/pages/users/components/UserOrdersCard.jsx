@@ -36,22 +36,30 @@ const statusColorMap = {
   refunded: "info",
 };
 
-const formatEur = (amount) => {
-  if (amount === null || amount === undefined) return "€0.00";
-  return `€${Number(amount).toFixed(2)}`;
+// Format currency with proper symbol/code
+const formatCurrency = (amount, currency = "EUR") => {
+  if (amount === null || amount === undefined) return `${getCurrencySymbol(currency)}0.00`;
+  return `${getCurrencySymbol(currency)}${Number(amount).toFixed(2)}`;
 };
 
-// Calculate the actual charged amount in EUR
-const getChargedAmountEur = (order) => {
+const getCurrencySymbol = (currency) => {
+  const symbols = {
+    EUR: "€",
+    RON: "RON ",
+    INR: "₹",
+  };
+  return symbols[currency] || `${currency} `;
+};
+
+// Calculate the actual charged amount
+const getChargedAmount = (order) => {
   // Use modified_amount if present and > 0, otherwise use original_amount
-  const amountInCurrency = (order.modified_amount > 0 ? order.modified_amount : order.original_amount) || 0;
-  
-  // Convert to EUR if exchange rate is provided and != 1
-  if (order.exchange_rate && order.exchange_rate !== 1) {
-    return amountInCurrency / order.exchange_rate;
-  }
-  
-  return amountInCurrency;
+  return (order.modified_amount > 0 ? order.modified_amount : order.original_amount) || 0;
+};
+
+// Get the display currency for an order (use display_currency if available, otherwise currency)
+const getOrderCurrency = (order) => {
+  return order.display_currency || order.currency || "EUR";
 };
 
 const formatDate = (dateString) => {
@@ -121,7 +129,7 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
   };
 
   return (
-    <Card>
+    <Card sx={{ height: "100%" }}>
       <CardHeader
         title={
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
@@ -129,7 +137,7 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
             {!loading && (
               <>
                 <Chip
-                  label={`${formatEur(statistics.total_revenue_eur)} revenue`}
+                  label={`€${Number(statistics.total_revenue_eur || 0).toFixed(2)} revenue (EUR)`}
                   size="small"
                   color="success"
                   variant="outlined"
@@ -174,14 +182,14 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
         }
       />
       <CardContent sx={{ p: 0 }}>
-        <TableContainer>
-          <Table size="small">
+        <TableContainer sx={{ maxHeight: 420, overflow: "auto" }}>
+          <Table size="small" stickyHeader>
             <TableHead>
               <TableRow>
                 <TableCell>Order ID</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Original (EUR)</TableCell>
+                <TableCell>Original Amount</TableCell>
                 <TableCell>Discount</TableCell>
                 <TableCell>
                   <TableSortLabel
@@ -250,11 +258,11 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{formatEur(order.exchange_rate && order.exchange_rate !== 1 ? order.original_amount / order.exchange_rate : order.original_amount)}</TableCell>
+                      <TableCell>{formatCurrency(order.original_amount, getOrderCurrency(order))}</TableCell>
                       <TableCell>
                         {order.discount_amount > 0 ? (
                           <Typography variant="body2" color="error.main">
-                            -{formatEur(order.exchange_rate && order.exchange_rate !== 1 ? order.discount_amount / order.exchange_rate : order.discount_amount)}
+                            -{formatCurrency(order.discount_amount, getOrderCurrency(order))}
                           </Typography>
                         ) : "—"}
                       </TableCell>
@@ -266,7 +274,7 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
                             <CardIcon sx={{ fontSize: 16, color: "primary.main" }} />
                           )}
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {formatEur(getChargedAmountEur(order))}
+                            {formatCurrency(getChargedAmount(order), getOrderCurrency(order))}
                           </Typography>
                         </Box>
                       </TableCell>

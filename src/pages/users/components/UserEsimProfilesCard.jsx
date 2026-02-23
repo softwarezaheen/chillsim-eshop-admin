@@ -89,7 +89,7 @@ export default function UserEsimProfilesCard({ userId, onProfileClick }) {
   const totalProfiles = (statistics.active_profiles || 0) + (statistics.pending_profiles || 0) + (statistics.expired_profiles || 0);
 
   return (
-    <Card>
+    <Card sx={{ height: "100%" }}>
       <CardHeader
         title={
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>

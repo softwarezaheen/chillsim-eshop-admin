@@ -82,7 +82,7 @@ export default function UserBundlesCard({ userId, onBundleClick }) {
   };
 
   return (
-    <Card>
+    <Card sx={{ height: "100%" }}>
       <CardHeader
         title={
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
