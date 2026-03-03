@@ -136,6 +136,9 @@ function OrdersPage() {
         getOrderStatistics({
           fromDate: formatDateForAPI(fromDate),
           toDate: formatDateForAPI(toDate),
+          orderStatus: orderStatus || null,
+          orderType: orderType || null,
+          paymentType: paymentType || null,
         }).then(stats => {
           setStatistics(stats);
           setStatsLoading(false);

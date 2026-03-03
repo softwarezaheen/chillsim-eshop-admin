@@ -24,7 +24,7 @@ export const getTrendsData = async (timeRange = 'current_year') => {
       const orderRes = await api(() => {
         let query = supabase
           .from("user_order")
-          .select("created_at, payment_status, currency, modified_amount, fee, vat")
+          .select("created_at, payment_status, currency, modified_amount, fee, vat, tax_mode")
           .order("created_at", { ascending: true })
           .range(rangeStart, rangeEnd);
 

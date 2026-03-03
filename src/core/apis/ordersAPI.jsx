@@ -201,9 +201,9 @@ export const getAllOrders = async ({ page, pageSize, userEmail, orderStatus, ord
 /**
  * Get order statistics for infographics (all orders in date range, not paginated)
  */
-export const getOrderStatistics = async ({ fromDate, toDate }) => {
+export const getOrderStatistics = async ({ fromDate, toDate, orderStatus, orderType, paymentType }) => {
   try {
-    // Fetch all orders matching only date filters - handle pagination to get all records
+    // Fetch all orders matching filters - handle pagination to get all records
     let allOrders = [];
     let hasMore = true;
     let rangeStart = 0;
@@ -219,7 +219,19 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
           .order("created_at", { ascending: false })
           .range(rangeStart, rangeEnd);
 
-        // Date range filters only (expecting YYYY-MM-DD format without timezone)
+        if (orderStatus) {
+          query = query.eq("payment_status", orderStatus);
+        }
+
+        if (orderType) {
+          query = query.eq("order_type", orderType);
+        }
+
+        if (paymentType) {
+          query = query.ilike("payment_type", paymentType);
+        }
+
+        // Date range filters (expecting YYYY-MM-DD format without timezone)
         if (fromDate) {
           query = query.gte("created_at", `${fromDate}T00:00:00.000Z`);
         }
@@ -327,12 +339,14 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
       }
     }
 
-    // Helper function to calculate total amount
+    // Helper function to calculate total amount (respects tax_mode)
     const calculateTotalAmount = (order) => {
       const modifiedAmount = order.modified_amount || 0;
       const fee = order.fee || 0;
       const vat = order.vat || 0;
-      return (modifiedAmount + fee + vat) / 100;
+      const taxMode = order.tax_mode || 'exclusive';
+      const vatToAdd = taxMode === 'inclusive' ? 0 : vat;
+      return (modifiedAmount + fee + vatToAdd) / 100;
     };
 
     // Calculate EUR amounts for all orders
@@ -348,7 +362,7 @@ export const getOrderStatistics = async ({ fromDate, toDate }) => {
       return { 
         ...order, 
         eur_amount: eurAmount,
-        billing_country: billingInfoMap[order.user_id] || null
+        billing_country: billingInfoMap[order.user_id] || null,
       };
     });
 
