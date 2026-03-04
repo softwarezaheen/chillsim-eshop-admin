@@ -29,12 +29,14 @@ import { toast } from "react-toastify";
 import Filters from "../../Components/Filters/Filters";
 import CustomDatePicker from "../../Components/CustomDatePicker";
 import { getUsers } from "../../core/apis/adminUsersAPI";
+import { getBatchUserAttributions } from "../../core/apis/attributionAPI";
 
 function UsersPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
+  const [attributionMap, setAttributionMap] = useState({});
 
   // Search & filter state
   const [search, setSearch] = useState("");
@@ -86,9 +88,21 @@ function UsersPage() {
         toast.error(result.error);
         setData([]);
         setTotalRows(0);
+        setAttributionMap({});
       } else {
-        setData(result.data || []);
+        const users = result.data || [];
+        setData(users);
         setTotalRows(result.count || 0);
+
+        // Batch-fetch attribution sources for this page
+        const userIds = users.map((u) => u.user_id).filter(Boolean);
+        if (userIds.length > 0) {
+          getBatchUserAttributions(userIds).then((attrResult) => {
+            if (!attrResult.error) setAttributionMap(attrResult.data || {});
+          });
+        } else {
+          setAttributionMap({});
+        }
       }
     } catch (e) {
       toast.error(e?.message || "Failed to load users");
@@ -171,6 +185,7 @@ function UsersPage() {
     { id: "wallet_balance", label: "Wallet Balance", sortKey: "wallet_balance" },
     { id: "orders", label: "Orders", sortKey: "orders" },
     { id: "revenue", label: "Revenue", sortKey: "revenue" },
+    { id: "source", label: "Source", sortable: false },
     { id: "created", label: "Created", sortKey: "created_at" },
   ];
 
@@ -420,6 +435,22 @@ function UsersPage() {
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       {formatCurrency(user.total_revenue_eur)}
                     </Typography>
+                  </TableCell>
+
+                  {/* Attribution Source */}
+                  <TableCell sx={{ minWidth: 110 }}>
+                    {attributionMap[user.user_id] ? (
+                      <Chip
+                        label={attributionMap[user.user_id].source_name}
+                        size="small"
+                        color="info"
+                        variant="outlined"
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        —
+                      </Typography>
+                    )}
                   </TableCell>
 
                   {/* Created Date */}

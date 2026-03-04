@@ -21,6 +21,7 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getUserInfo } from "../../../core/apis/adminUsersAPI";
+import { getUserAttribution } from "../../../core/apis/attributionAPI";
 
 const accountSourceLabels = {
   email: "Email",
@@ -44,15 +45,22 @@ const InfoRow = ({ icon, label, value }) => (
 export default function UserInfoCard({ userId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [attribution, setAttribution] = useState(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getUserInfo(userId);
+      const [result, attrResult] = await Promise.all([
+        getUserInfo(userId),
+        getUserAttribution(userId),
+      ]);
       if (result.error) {
         toast.error(result.error);
       } else {
         setData(result.data);
+      }
+      if (!attrResult.error && attrResult.data) {
+        setAttribution(attrResult.data);
       }
     } catch (e) {
       toast.error("Failed to load user info");
@@ -226,6 +234,83 @@ export default function UserInfoCard({ userId }) {
             </Box>
           </Grid>
         </Grid>
+
+        {/* Attribution Source */}
+        {attribution && attribution.customer_source && (
+          <>
+            <Divider sx={{ my: 1.5 }} />
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              Customer Attribution
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item size={{ xs: 12, sm: 6, md: 2.4 }}>
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, py: 0.75 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Acquisition Source
+                    </Typography>
+                    <Box sx={{ mt: 0.3 }}>
+                      <Chip
+                        label={attribution.customer_source.name}
+                        size="small"
+                        color="info"
+                        variant="outlined"
+                      />
+                    </Box>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item size={{ xs: 12, sm: 6, md: 2.4 }}>
+                <InfoRow
+                  label="Attributed On"
+                  value={attribution.attributed_at ? new Date(attribution.attributed_at).toLocaleDateString() : "—"}
+                />
+              </Grid>
+              {attribution.total_orders > 0 && (
+                <Grid item size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <InfoRow
+                    label="Lifetime Orders"
+                    value={attribution.total_orders}
+                  />
+                </Grid>
+              )}
+              {(attribution.total_revenue_eur || 0) > 0 && (
+                <Grid item size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <InfoRow
+                    label="Lifetime Revenue"
+                    value={`€${Number(attribution.total_revenue_eur).toFixed(2)}`}
+                  />
+                </Grid>
+              )}
+              {attribution.attribution_data && (
+                <Grid item size={{ xs: 12, sm: 6, md: 2.4 }}>
+                  <Box sx={{ py: 0.75 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Signals
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.3 }}>
+                      {attribution.attribution_data.utm_source && (
+                        <Chip label={`utm: ${attribution.attribution_data.utm_source}`} size="small" variant="outlined" />
+                      )}
+                      {attribution.attribution_data.promo_code && (
+                        <Chip label={`promo: ${attribution.attribution_data.promo_code}`} size="small" variant="outlined" />
+                      )}
+                      {attribution.attribution_data.referral_code && (
+                        <Chip label={`referral: ${attribution.attribution_data.referral_code}`} size="small" variant="outlined" />
+                      )}
+                      {attribution.attribution_data.affiliate_click && (
+                        <Chip label="affiliate click" size="small" variant="outlined" />
+                      )}
+                      {attribution.attribution_data.partner_id && (
+                        <Chip label="partner voucher" size="small" variant="outlined" />
+                      )}
+                    </Box>
+                  </Box>
+                </Grid>
+              )}
+            </Grid>
+          </>
+        )}
       </CardContent>
     </Card>
   );

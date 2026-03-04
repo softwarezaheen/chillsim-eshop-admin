@@ -337,4 +337,55 @@ export const MenuRoutes = [
       },
     ],
   },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 12,
+    uri: "customer-sources",
+    iconUri: "fa-bullseye",
+    recordGuid: "12",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Attribution",
+        description: "Customer Source Attribution",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: "Attribution",
+    parentGuid: "12",
+    displayOrder: 0,
+    uri: "customer-sources",
+    iconUri: "fa-sitemap",
+    recordGuid: "12-1",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Sources",
+        description: "Manage Customer Sources",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: "Attribution",
+    parentGuid: "12",
+    displayOrder: 1,
+    uri: "attribution",
+    iconUri: "fa-chart-pie",
+    recordGuid: "12-2",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Reports",
+        description: "Attribution Reports & CLV",
+        languageCode: "en",
+      },
+    ],
+  },
 ];

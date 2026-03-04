@@ -25,8 +25,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      open: true,
-      port: parseInt(env.VITE_PORT),
+      port: 5174,
+      strictPort: true,
       hmr: true,
       hot: true,
     },

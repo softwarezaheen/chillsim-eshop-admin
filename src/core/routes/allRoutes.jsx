@@ -26,6 +26,10 @@ import CookiePolicyPage from "../../pages/app-content/CookiePolicyPage";
 // Financial Pages
 import FinancialPage from "../../pages/financial/FinancialPage";
 
+// Customer Attribution Pages
+import CustomerSourcesPage from "../../pages/customer-sources/CustomerSourcesPage";
+import AttributionReportsPage from "../../pages/attribution/AttributionReportsPage";
+
 export const privateRoutes = [
   {
     path: "/",
@@ -181,6 +185,21 @@ export const privateRoutes = [
         key: "/app-content/cookie-policy",
         name: "Cookie Policy",
         regex: "^/app-content/cookie-policy/?$",
+      },
+      // Customer Attribution Routes
+      {
+        path: "/customer-sources",
+        element: <CustomerSourcesPage />,
+        key: "/customer-sources",
+        name: "Customer Sources",
+        regex: "^/customer-sources/?$",
+      },
+      {
+        path: "/attribution",
+        element: <AttributionReportsPage />,
+        key: "/attribution",
+        name: "Attribution Reports",
+        regex: "^/attribution/?$",
       },
       {
         path: "*",
