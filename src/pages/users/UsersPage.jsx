@@ -29,7 +29,7 @@ import { toast } from "react-toastify";
 import Filters from "../../Components/Filters/Filters";
 import CustomDatePicker from "../../Components/CustomDatePicker";
 import { getUsers } from "../../core/apis/adminUsersAPI";
-import { getBatchUserAttributions } from "../../core/apis/attributionAPI";
+import { getBatchUserAttributions, getCustomerSources } from "../../core/apis/attributionAPI";
 
 function UsersPage() {
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ function UsersPage() {
   const [data, setData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
   const [attributionMap, setAttributionMap] = useState({});
+  const [topLevelSources, setTopLevelSources] = useState([]);
 
   // Search & filter state
   const [search, setSearch] = useState("");
@@ -45,6 +46,7 @@ function UsersPage() {
   const [hasOrders, setHasOrders] = useState(""); // "" = all, "true" = with orders, "false" = without orders
   const [accountSource, setAccountSource] = useState(""); // "" = all, "email", "google", "apple", "facebook"
   const [marketingSubscribed, setMarketingSubscribed] = useState(""); // "" = all, "true" = subscribed, "false" = not subscribed
+  const [attributionSource, setAttributionSource] = useState(""); // "" = all, or source UUID
 
   // Pagination state (MUI is 0-indexed, API is 1-indexed)
   const [page, setPage] = useState(0);
@@ -62,7 +64,18 @@ function UsersPage() {
     hasOrders: "",
     accountSource: "",
     marketingSubscribed: "",
+    attributionSource: "",
   });
+
+  // Fetch top-level customer sources for the attribution filter dropdown
+  useEffect(() => {
+    getCustomerSources().then((result) => {
+      if (!result.error) {
+        const parents = (result.data || []).filter((s) => !s.parent_id);
+        setTopLevelSources(parents);
+      }
+    });
+  }, []);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -80,6 +93,7 @@ function UsersPage() {
         has_orders: appliedFilters.hasOrders === "" ? undefined : appliedFilters.hasOrders === "true",
         account_source: appliedFilters.accountSource || undefined,
         marketing_subscribed: appliedFilters.marketingSubscribed === "" ? undefined : appliedFilters.marketingSubscribed === "true",
+        attribution_source_id: appliedFilters.attributionSource || undefined,
         sort_by: sortBy,
         sort_dir: sortDir,
       });
@@ -126,6 +140,7 @@ function UsersPage() {
       hasOrders,
       accountSource,
       marketingSubscribed,
+      attributionSource,
     });
   };
 
@@ -136,6 +151,7 @@ function UsersPage() {
     setHasOrders("");
     setAccountSource("");
     setMarketingSubscribed("");
+    setAttributionSource("");
     setPage(0);
     setAppliedFilters({
       search: "",
@@ -144,6 +160,7 @@ function UsersPage() {
       hasOrders: "",
       accountSource: "",
       marketingSubscribed: "",
+      attributionSource: "",
     });
   };
 
@@ -301,6 +318,23 @@ function UsersPage() {
                 <MenuItem value="">All Users</MenuItem>
                 <MenuItem value="true">Subscribed</MenuItem>
                 <MenuItem value="false">Not Subscribed</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item size={{ xs: 12, sm: 6, md: 3 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="attribution-source-label">Marketing Source</InputLabel>
+              <Select
+                labelId="attribution-source-label"
+                id="attribution-source-select"
+                value={attributionSource}
+                label="Marketing Source"
+                onChange={(e) => setAttributionSource(e.target.value)}
+              >
+                <MenuItem value="">All Sources</MenuItem>
+                {topLevelSources.map((s) => (
+                  <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>

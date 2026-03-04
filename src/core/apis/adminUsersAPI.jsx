@@ -43,6 +43,7 @@ export const getUsers = async ({
   has_orders,
   account_source,
   marketing_subscribed,
+  attribution_source_id,
   sort_by = 'created_at',
   sort_dir = 'desc'
 } = {}) => {
@@ -56,6 +57,7 @@ export const getUsers = async ({
     if (has_orders !== undefined && has_orders !== null) params.append('has_orders', has_orders);
     if (account_source) params.append('account_source', account_source);
     if (marketing_subscribed !== undefined && marketing_subscribed !== null) params.append('marketing_subscribed', marketing_subscribed);
+    if (attribution_source_id) params.append('attribution_source_id', attribution_source_id);
     if (sort_by) params.append('sort_by', sort_by);
     if (sort_dir) params.append('sort_dir', sort_dir);
 

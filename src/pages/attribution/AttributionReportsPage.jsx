@@ -191,7 +191,7 @@ export default function AttributionReportsPage() {
         const row = reportData.find(
           (r) => r.period === p && r.source_name === name
         );
-        return row ? Number(row.total_revenue || 0) : 0;
+        return row ? Number(row.total_revenue_eur || 0) : 0;
       }),
       backgroundColor: chartColors[i % chartColors.length],
       borderRadius: 3,
@@ -225,7 +225,7 @@ export default function AttributionReportsPage() {
     }
     sourceTotals[key].customers += Number(r.customer_count || 0);
     sourceTotals[key].orders += Number(r.total_orders || 0);
-    sourceTotals[key].revenue += Number(r.total_revenue || 0);
+    sourceTotals[key].revenue += Number(r.total_revenue_eur || 0);
   });
 
   const sortedSourceTotals = Object.entries(sourceTotals).sort(
@@ -496,7 +496,7 @@ export default function AttributionReportsPage() {
                         <TableCell align="right">{row.customer_count || 0}</TableCell>
                         <TableCell align="right">{row.total_orders || 0}</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 500 }}>
-                          {fmt(row.total_revenue)}
+                          {fmt(row.total_revenue_eur)}
                         </TableCell>
                       </TableRow>
                     ))
