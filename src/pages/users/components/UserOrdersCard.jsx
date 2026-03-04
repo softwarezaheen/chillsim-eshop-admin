@@ -51,15 +51,20 @@ const getCurrencySymbol = (currency) => {
   return symbols[currency] || `${currency} `;
 };
 
-// Calculate the actual charged amount
+// Calculate the total actually charged (base + fee + VAT), in original currency.
+// This matches the "Total Amount" row in the order detail modal.
 const getChargedAmount = (order) => {
-  // Use modified_amount if present and > 0, otherwise use original_amount
-  return (order.modified_amount > 0 ? order.modified_amount : order.original_amount) || 0;
+  const base = (order.modified_amount > 0 ? order.modified_amount : order.original_amount) || 0;
+  return base + (order.fee || 0) + (order.vat || 0);
 };
 
-// Get the display currency for an order (use display_currency if available, otherwise currency)
-const getOrderCurrency = (order) => {
-  return order.display_currency || order.currency || "EUR";
+// Convert an amount to EUR using the order's exchange_rate.
+// exchange_rate is how many local-currency units equal 1 EUR (e.g. 4.97 RON = 1 EUR).
+// EUR orders have exchange_rate = 1, so division is a no-op.
+const toEur = (amount, exchangeRate) => {
+  const rate = Number(exchangeRate);
+  if (!amount) return 0;
+  return rate > 0 ? Number(amount) / rate : Number(amount);
 };
 
 const formatDate = (dateString) => {
@@ -189,8 +194,8 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
                 <TableCell>Order ID</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Original Amount</TableCell>
-                <TableCell>Discount</TableCell>
+                <TableCell>Original (EUR)</TableCell>
+                <TableCell>Discount (EUR)</TableCell>
                 <TableCell>
                   <TableSortLabel
                     active={sortBy === "payment_amount"}
@@ -258,11 +263,11 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{formatCurrency(order.original_amount, getOrderCurrency(order))}</TableCell>
+                      <TableCell>{formatCurrency(toEur(order.original_amount, order.exchange_rate), "EUR")}</TableCell>
                       <TableCell>
                         {order.discount_amount > 0 ? (
                           <Typography variant="body2" color="error.main">
-                            -{formatCurrency(order.discount_amount, getOrderCurrency(order))}
+                            -{formatCurrency(toEur(order.discount_amount, order.exchange_rate), "EUR")}
                           </Typography>
                         ) : "—"}
                       </TableCell>
@@ -274,7 +279,7 @@ export default function UserOrdersCard({ userId, onOrderClick }) {
                             <CardIcon sx={{ fontSize: 16, color: "primary.main" }} />
                           )}
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {formatCurrency(getChargedAmount(order), getOrderCurrency(order))}
+                            {formatCurrency(toEur(getChargedAmount(order), order.exchange_rate), "EUR")}
                           </Typography>
                         </Box>
                       </TableCell>
