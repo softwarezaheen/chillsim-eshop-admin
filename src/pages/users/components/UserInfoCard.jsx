@@ -7,6 +7,17 @@ import {
   Chip,
   Skeleton,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {
@@ -17,11 +28,12 @@ import {
   Business as BusinessIcon,
   LocationOn as LocationIcon,
   Campaign as CampaignIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { getUserInfo } from "../../../core/apis/adminUsersAPI";
-import { getUserAttribution } from "../../../core/apis/attributionAPI";
+import { getUserAttribution, updateUserAttribution, getCustomerSources } from "../../../core/apis/attributionAPI";
 
 const accountSourceLabels = {
   email: "Email",
@@ -46,6 +58,37 @@ export default function UserInfoCard({ userId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [attribution, setAttribution] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [sources, setSources] = useState([]);
+  const [sourcesLoading, setSourcesLoading] = useState(false);
+  const [selectedSourceId, setSelectedSourceId] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const handleEditOpen = async () => {
+    setSelectedSourceId(attribution?.source_id || "");
+    setEditOpen(true);
+    if (sources.length === 0) {
+      setSourcesLoading(true);
+      const { data: srcData } = await getCustomerSources();
+      setSources(srcData || []);
+      setSourcesLoading(false);
+    }
+  };
+
+  const handleEditSave = async () => {
+    setSaving(true);
+    const { data: updated, error } = await updateUserAttribution(userId, {
+      source_id: selectedSourceId || null,
+    });
+    if (error) {
+      toast.error(`Failed to update attribution: ${error}`);
+    } else {
+      setAttribution(updated);
+      toast.success("Attribution updated");
+      setEditOpen(false);
+    }
+    setSaving(false);
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -236,12 +279,22 @@ export default function UserInfoCard({ userId }) {
         </Grid>
 
         {/* Attribution Source */}
-        {attribution && attribution.customer_source && (
+        {(attribution || !loading) && (
           <>
             <Divider sx={{ my: 1.5 }} />
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
               Customer Attribution
             </Typography>
+            {!attribution ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No attribution record yet.
+                </Typography>
+                <Button size="small" startIcon={<EditIcon fontSize="small" />} onClick={handleEditOpen}>
+                  Set Source
+                </Button>
+              </Box>
+            ) : (
             <Grid container spacing={2}>
               <Grid item size={{ xs: 12, sm: 6, md: 2.4 }}>
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, py: 0.75 }}>
@@ -249,13 +302,16 @@ export default function UserInfoCard({ userId }) {
                     <Typography variant="caption" color="text.secondary">
                       Acquisition Source
                     </Typography>
-                    <Box sx={{ mt: 0.3 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.3 }}>
                       <Chip
-                        label={attribution.customer_source.name}
+                        label={attribution.customer_source?.name || "Unattributed"}
                         size="small"
-                        color="info"
+                        color={attribution.customer_source ? "info" : "default"}
                         variant="outlined"
                       />
+                      <IconButton size="small" onClick={handleEditOpen} title="Edit attribution source">
+                        <EditIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
                     </Box>
                   </Box>
                 </Box>
@@ -309,8 +365,56 @@ export default function UserInfoCard({ userId }) {
                 </Grid>
               )}
             </Grid>
+            )}
           </>
         )}
+
+        {/* Edit Attribution Dialog */}
+        <Dialog open={editOpen} onClose={() => !saving && setEditOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle>Edit Attribution Source</DialogTitle>
+          <DialogContent>
+            {sourcesLoading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                <CircularProgress size={28} />
+              </Box>
+            ) : (
+              <FormControl fullWidth sx={{ mt: 1 }}>
+                <InputLabel>Source</InputLabel>
+                <Select
+                  value={selectedSourceId}
+                  label="Source"
+                  onChange={(e) => setSelectedSourceId(e.target.value)}
+                >
+                  <MenuItem value=""><em>— Unattributed —</em></MenuItem>
+                  {sources
+                    .filter((s) => s.is_active)
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .flatMap((parent) => {
+                      const activeSubs = (parent.sub_sources || [])
+                        .filter((s) => s.is_active)
+                        .sort((a, b) => a.sort_order - b.sort_order);
+                      return [
+                        <MenuItem key={parent.id} value={parent.id} sx={{ fontWeight: 600 }}>
+                          {parent.name}
+                        </MenuItem>,
+                        ...activeSubs.map((sub) => (
+                          <MenuItem key={sub.id} value={sub.id} sx={{ pl: 4 }}>
+                            ↳ {sub.name}
+                          </MenuItem>
+                        )),
+                      ];
+                    })}
+                </Select>
+              </FormControl>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditOpen(false)} disabled={saving}>Cancel</Button>
+            <Button onClick={handleEditSave} variant="contained" disabled={saving || sourcesLoading}>
+              {saving ? <CircularProgress size={16} sx={{ color: "inherit" }} /> : "Save"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </CardContent>
     </Card>
   );

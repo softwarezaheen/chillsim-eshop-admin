@@ -197,36 +197,40 @@ export default function CustomerSourceForm({
               rows={2}
             />
           </Grid>
-          <Grid item xs={8}>
-            {parentId ? (
-              // Locked — opened via "Add Sub-Source", parent is fixed
-              <TextField
-                label="Parent Source"
-                value={topLevelSources.find((s) => s.id === parentId)?.name ?? ""}
-                fullWidth
-                disabled
-                helperText="Parent is fixed when adding a sub-source from the table"
-              />
-            ) : (
-              // Edit mode only — allow changing parent (but "None" is blocked for new sources)
-              <FormControl fullWidth>
-                <InputLabel>Parent Source</InputLabel>
-                <Select
-                  value={form.parent_id || ""}
-                  onChange={(e) =>
-                    handleChange("parent_id", e.target.value || null)
-                  }
+          {/* Parent source field — hidden for top-level sources */}
+          {!(isEdit && !source.parent_id) && (
+            <Grid item xs={8}>
+              {parentId ? (
+                // Locked — opened via "Add Sub-Source", parent is fixed
+                <TextField
                   label="Parent Source"
-                >
-                  {topLevelSources.map((s) => (
-                    <MenuItem key={s.id} value={s.id}>
-                      {s.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-          </Grid>
+                  value={topLevelSources.find((s) => s.id === parentId)?.name ?? ""}
+                  fullWidth
+                  disabled
+                  helperText="Parent is fixed when adding a sub-source from the table"
+                />
+              ) : (
+                // Creating a new source or editing a sub-source
+                <FormControl fullWidth>
+                  <InputLabel>Parent Source</InputLabel>
+                  <Select
+                    value={form.parent_id || ""}
+                    onChange={(e) =>
+                      handleChange("parent_id", e.target.value || null)
+                    }
+                    label="Parent Source"
+                  >
+                    <MenuItem value=""><em>— None (top-level) —</em></MenuItem>
+                    {topLevelSources.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>
+                        {s.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            </Grid>
+          )}
           <Grid item xs={4}>
             {/* Hide toggle for top-level sources — deactivating them causes
                 misattribution because _get_source_by_slug() silently returns None */}

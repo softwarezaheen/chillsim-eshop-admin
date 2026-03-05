@@ -99,6 +99,19 @@ export const getUserAttribution = async (userId) => {
   }
 };
 
+export const updateUserAttribution = async (userId, { source_id }) => {
+  try {
+    const response = await attributionAPI.patch(
+      `/admin/customer-attributions/${userId}`,
+      { source_id }
+    );
+    return { data: response.data.data, error: null };
+  } catch (error) {
+    console.error("Error updating user attribution:", error);
+    return { data: null, error: error.response?.data?.detail || error.message };
+  }
+};
+
 /**
  * Batch-fetch attribution source names for a list of user_ids.
  * Returns { data: { user_id: { source_name, source_slug, ... }, ... } }

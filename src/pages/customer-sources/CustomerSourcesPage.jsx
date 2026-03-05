@@ -23,6 +23,7 @@ import {
   FormControlLabel,
   Checkbox,
   Alert,
+  Switch,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -31,6 +32,7 @@ import {
   ExpandLess as ExpandLessIcon,
   InfoOutlined as InfoIcon,
   Replay as ReplayIcon,
+  VisibilityOff as VisibilityOffIcon,
 } from "@mui/icons-material";
 import {
   getCustomerSources,
@@ -73,6 +75,7 @@ export default function CustomerSourcesPage() {
 
   // Priority info widget
   const [priorityOpen, setPriorityOpen] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   // Backfill dialog state
   const [backfillOpen, setBackfillOpen] = useState(false);
@@ -148,14 +151,22 @@ export default function CustomerSourcesPage() {
   };
 
   // Sort sources by attribution priority order (matches _match_source() in attribution_service.py)
-  const sortedSources = [...sources].sort((a, b) => {
-    const ai = PRIORITY_SLUGS.indexOf(a.slug);
-    const bi = PRIORITY_SLUGS.indexOf(b.slug);
-    if (ai === -1 && bi === -1) return 0;
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
-  });
+  const sortedSources = [...sources]
+    .filter((s) => showInactive || s.is_active)
+    .sort((a, b) => {
+      const ai = PRIORITY_SLUGS.indexOf(a.slug);
+      const bi = PRIORITY_SLUGS.indexOf(b.slug);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    })
+    .map((s) => ({
+      ...s,
+      sub_sources: showInactive
+        ? s.sub_sources
+        : (s.sub_sources || []).filter((sub) => sub.is_active),
+    }));
 
   return (
     <Card className="page-card" sx={{ p: 3 }}>
@@ -173,7 +184,24 @@ export default function CustomerSourcesPage() {
             Manage customer acquisition source taxonomy used for attribution
           </Typography>
         </Box>
-        <Box display="flex" gap={1}>
+        <Box display="flex" gap={1} alignItems="center">
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+                color="default"
+              />
+            }
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <VisibilityOffIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                <Typography variant="body2" color="text.secondary">Show inactive</Typography>
+              </Box>
+            }
+            sx={{ mr: 1 }}
+          />
           <Button
             variant="outlined"
             startIcon={<ReplayIcon />}
