@@ -180,3 +180,13 @@ export const runAttributionBackfill = async ({ dryRun = false, forceReattribute 
     return { data: {}, error: error.response?.data?.detail || error.message };
   }
 };
+
+export const recalculateClv = async () => {
+  try {
+    const response = await attributionAPI.post("/admin/attribution-recalculate-clv");
+    return { data: response.data.data || {}, error: null };
+  } catch (error) {
+    console.error("Error triggering CLV recalculation:", error);
+    return { data: {}, error: error.response?.data?.detail || error.message };
+  }
+};

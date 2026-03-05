@@ -19,6 +19,8 @@ import {
   Skeleton,
   ToggleButton,
   ToggleButtonGroup,
+  Button,
+  Tooltip,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import {
@@ -36,6 +38,7 @@ import {
   getAttributionReport,
   getAttributionSummary,
   getCustomerSources,
+  recalculateClv,
 } from "../../core/apis/attributionAPI";
 import Filters from "../../Components/Filters/Filters";
 import CustomDatePicker from "../../Components/CustomDatePicker";
@@ -259,8 +262,8 @@ export default function AttributionReportsPage() {
             title="Top Source (Customers)"
             value={summary.top_source_by_customers || "—"}
             subtitle={
-              summary.top_source_customer_count
-                ? `${summary.top_source_customer_count} customers`
+              summary.top_source_customers
+                ? `${summary.top_source_customers} customers`
                 : ""
             }
             loading={!Object.keys(summary).length}
@@ -385,6 +388,24 @@ export default function AttributionReportsPage() {
                 <Typography variant="subtitle1" fontWeight={600}>
                   Source Breakdown
                 </Typography>
+              }
+              action={
+                <Tooltip title="Recalculate revenue totals for all customers (runs in background)">
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={async () => {
+                      const res = await recalculateClv();
+                      if (res.error) {
+                        toast.error(`CLV recalculation failed: ${res.error}`);
+                      } else {
+                        toast.success("CLV recalculation started — refresh in a minute to see updated numbers");
+                      }
+                    }}
+                  >
+                    Recalculate CLV
+                  </Button>
+                </Tooltip>
               }
             />
             <TableContainer>
