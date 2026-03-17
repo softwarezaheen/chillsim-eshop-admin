@@ -24,7 +24,7 @@ export const getTrendsData = async (timeRange = 'current_year') => {
       const orderRes = await api(() => {
         let query = supabase
           .from("user_order")
-          .select("created_at, payment_status, currency, modified_amount, fee, vat, tax_mode")
+          .select("created_at, payment_status, currency, modified_amount, fee, vat, tax_mode, exchange_rate")
           .order("created_at", { ascending: true })
           .range(rangeStart, rangeEnd);
 
@@ -70,12 +70,11 @@ export const getTrendsData = async (timeRange = 'current_year') => {
       
       const totalAmount = (modifiedAmount + fee + vatToAdd) / 100;
       
-      if (order.currency && order.currency.toUpperCase() === 'EUR') {
-        return totalAmount;
-      } else if (order.currency && currencyRates[order.currency]) {
-        return totalAmount / currencyRates[order.currency];
-      }
-      return 0;
+      // Use the exchange_rate locked at order time for accurate historical revenue.
+      // Fall back to today's currency table rate only if exchange_rate is missing.
+      const rate = order.exchange_rate || currencyRates[order.currency];
+      if (!rate || rate <= 0) return 0;
+      return totalAmount / rate;
     };
 
     // Process revenue by month with year separation for comparison

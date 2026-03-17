@@ -53,9 +53,11 @@ const getCurrencySymbol = (currency) => {
 
 // Calculate the total actually charged (base + fee + VAT), in original currency.
 // This matches the "Total Amount" row in the order detail modal.
+// For inclusive tax_mode, modified_amount already contains VAT — do not add it again.
 const getChargedAmount = (order) => {
   const base = (order.modified_amount > 0 ? order.modified_amount : order.original_amount) || 0;
-  return base + (order.fee || 0) + (order.vat || 0);
+  const vat = order.tax_mode === 'inclusive' ? 0 : (order.vat || 0);
+  return base + (order.fee || 0) + vat;
 };
 
 // Convert an amount to EUR using the order's exchange_rate.
