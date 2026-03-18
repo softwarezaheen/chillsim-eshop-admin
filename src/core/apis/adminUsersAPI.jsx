@@ -12,9 +12,19 @@ const adminUsersAPI = axios.create({
 });
 
 // Error interceptor
+const IP_BLOCK_DETAILS = ["IP address not authorised", "Unable to determine client IP address"];
+
 adminUsersAPI.interceptors.response.use(
   response => response,
   error => {
+    const status = error.response?.status;
+    // Backend global exception handler converts 403 → 401, so check 401 for IP blocks
+    const detail = error.response?.data?.message || error.response?.data?.detail || "";
+    if (status === 401 && IP_BLOCK_DETAILS.some(msg => detail.includes(msg))) {
+      sessionStorage.setItem("ip_block_detail", detail);
+      window.location.href = "/ip-blocked";
+      return new Promise(() => {}); // prevent further error handling
+    }
     console.error('Admin Users API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
@@ -340,6 +350,8 @@ export const getUserFinancialDocs = async (userId, { page = 1, pageSize = 10 } =
     };
   }
 };
+
+export { adminUsersAPI };
 
 export default {
   getUsers,
