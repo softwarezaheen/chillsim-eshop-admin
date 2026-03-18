@@ -388,4 +388,38 @@ export const MenuRoutes = [
       },
     ],
   },
+  {
+    parentName: null,
+    parentGuid: null,
+    displayOrder: 13,
+    uri: "security/ip-whitelist",
+    iconUri: "fa-shield-halved",
+    recordGuid: "13",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "Security",
+        description: "Security Settings",
+        languageCode: "en",
+      },
+    ],
+  },
+  {
+    parentName: "Security",
+    parentGuid: "13",
+    displayOrder: 0,
+    uri: "security/ip-whitelist",
+    iconUri: "fa-list-check",
+    recordGuid: "13-1",
+    position: 100,
+    group: 1,
+    menuDetail: [
+      {
+        name: "IP Whitelist",
+        description: "Admin IP Whitelist",
+        languageCode: "en",
+      },
+    ],
+  },
 ];

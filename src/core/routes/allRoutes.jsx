@@ -30,6 +30,10 @@ import FinancialPage from "../../pages/financial/FinancialPage";
 import CustomerSourcesPage from "../../pages/customer-sources/CustomerSourcesPage";
 import AttributionReportsPage from "../../pages/attribution/AttributionReportsPage";
 
+// Security Pages
+import IPWhitelistPage from "../../pages/security/IPWhitelistPage";
+import IPBlockedPage from "../../pages/security/IPBlockedPage";
+
 export const privateRoutes = [
   {
     path: "/",
@@ -201,6 +205,14 @@ export const privateRoutes = [
         name: "Attribution Reports",
         regex: "^/attribution/?$",
       },
+      // Security Routes
+      {
+        path: "/security/ip-whitelist",
+        element: <IPWhitelistPage />,
+        key: "/security/ip-whitelist",
+        name: "IP Whitelist",
+        regex: "^/security/ip-whitelist/?$",
+      },
       {
         path: "*",
         element: <PageNotFound />,
@@ -209,6 +221,15 @@ export const privateRoutes = [
         regex: "^/bundles/?$",
       },
     ],
+  },
+];
+
+// Standalone routes — no auth wrapper, accessible by anyone
+export const standaloneRoutes = [
+  {
+    path: "/ip-blocked",
+    element: <IPBlockedPage />,
+    key: "/ip-blocked",
   },
 ];
 
